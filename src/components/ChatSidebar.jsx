@@ -11,10 +11,15 @@ import {
   Tooltip,
   Divider
 } from "@mui/material";
-import { Settings } from "lucide-react";
+import { Settings, LogOut } from "lucide-react";
 
 export default function ChatSidebar({ chats, selectedChat, onSelect }) {
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem('jwtToken');
+    window.location.reload();
+  };
 
   return (
     <Paper
@@ -44,14 +49,26 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
         <Typography variant="h6" fontWeight="bold">
           Чаты
         </Typography>
-        <Tooltip title="Настройки">
-          <IconButton
-            onClick={() => navigate("/settings")}
-            size="small"
-          >
-            <Settings />
-          </IconButton>
-        </Tooltip>
+        <Box sx={{ display: 'flex', gap: 1 }}>
+          <Tooltip title="Настройки">
+            <IconButton
+              onClick={() => navigate("/settings")}
+              size="small"
+              color="inherit"
+            >
+              <Settings />
+            </IconButton>
+          </Tooltip>
+          <Tooltip title="Выйти">
+            <IconButton
+              onClick={handleLogout}
+              size="small"
+              color="error"
+            >
+              <LogOut />
+            </IconButton>
+          </Tooltip>
+        </Box>
       </Box>
 
       <List sx={{ flex: 1, overflow: 'auto', px: 0 }}>
