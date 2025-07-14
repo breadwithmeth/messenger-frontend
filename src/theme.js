@@ -1,143 +1,179 @@
 import { createTheme } from '@mui/material/styles';
 
-const theme = createTheme({
+// Создаем тему в стиле ретро-пиксель-арт
+const retroTheme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#4dabf7', // Яркий, но не кричащий синий
-      light: '#74c0fc',
-      dark: '#228be6',
+      main: '#FF00FF', // Яркий пурпурный
+      contrastText: '#FFFFFF',
     },
     secondary: {
-      main: '#f06595', // Приглушенный розовый
-      light: '#f78fb7',
-      dark: '#d6336c',
+      main: '#00FFFF', // Яркий циан
+      contrastText: '#000000',
     },
     background: {
-      default: '#0B1929', // Очень темный синий, почти черный
-      paper: '#152E4D',   // Глубокий синий для поверхностей
+      default: '#000000',
+      paper: '#1A1A1A',
     },
     text: {
-      primary: '#E0E0E0',
-      secondary: '#A0AEC0',
-    },
-    divider: 'rgba(100, 125, 150, 0.3)',
-    success: {
-      main: '#4CAF50',
+      primary: '#FFFFFF',
+      secondary: '#AAAAAA',
     },
     error: {
-      main: '#F44336',
+      main: '#FF0000',
     },
-    warning: {
-      main: '#FF9800',
+    success: {
+      main: '#00FF00',
     },
+    divider: '#555555',
   },
   typography: {
-    fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-    h4: {
-      fontWeight: 700,
-      letterSpacing: '-0.02em',
-    },
-    h6: {
-      fontWeight: 600,
-    },
-    subtitle1: {
-      fontWeight: 500,
-    },
+    fontFamily: '"Press Start 2P", cursive',
+    fontSize: 12,
+    h1: { fontSize: '2.5rem' },
+    h2: { fontSize: '2rem' },
+    h3: { fontSize: '1.75rem' },
+    h4: { fontSize: '1.5rem' },
+    h5: { fontSize: '1.25rem' },
+    h6: { fontSize: '1rem' },
     button: {
-      fontWeight: 600,
-      textTransform: 'none',
+      textTransform: 'uppercase',
+      letterSpacing: '2px',
     },
-  },
-  shape: {
-    borderRadius: 12,
   },
   components: {
     MuiCssBaseline: {
       styleOverrides: {
         body: {
-          scrollbarColor: '#6b6b6b #2b2b2b',
-          '&::-webkit-scrollbar, & *::-webkit-scrollbar': {
-            backgroundColor: 'rgba(0, 0, 0, 0.1)',
-            width: '8px',
+          imageRendering: 'pixelated', // Четкие пиксели для изображений
+          scrollbarColor: "#00FFFF #1A1A1A",
+          "&::-webkit-scrollbar, & *::-webkit-scrollbar": {
+            backgroundColor: "#000",
+            width: '12px'
           },
-          '&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb': {
-            borderRadius: 8,
-            backgroundColor: '#4dabf7',
-            minHeight: 24,
-            border: '1px solid #0B1929',
+          "&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb": {
+            borderRadius: 0,
+            backgroundColor: "#FF00FF",
+            border: "2px solid #00FFFF",
           },
-          '&::-webkit-scrollbar-thumb:focus, & *::-webkit-scrollbar-thumb:focus': {
-            backgroundColor: '#228be6',
-          },
-          '&::-webkit-scrollbar-thumb:active, & *::-webkit-scrollbar-thumb:active': {
-            backgroundColor: '#228be6',
-          },
-          '&::-webkit-scrollbar-thumb:hover, & *::-webkit-scrollbar-thumb:hover': {
-            backgroundColor: '#74c0fc',
-          },
-          '&::-webkit-scrollbar-corner, & *::-webkit-scrollbar-corner': {
-            backgroundColor: '#2b2b2b',
+          "&::-webkit-scrollbar-thumb:hover, & *::-webkit-scrollbar-thumb:hover": {
+            backgroundColor: "#00FFFF",
+            borderColor: '#FF00FF',
           },
         },
       },
     },
     MuiButton: {
+      defaultProps: {
+        disableElevation: true,
+      },
       styleOverrides: {
         root: {
-          boxShadow: 'none',
+          borderRadius: 0,
+          border: '2px solid',
+          borderColor: 'currentColor',
+          padding: '8px 16px',
+          transition: 'all 0.1s linear',
           '&:hover': {
-            boxShadow: 'none',
+            backgroundColor: 'primary.main',
+            color: 'background.default',
           },
         },
+        containedPrimary: {
+          backgroundColor: '#FF00FF',
+          color: '#FFFFFF',
+          borderColor: '#FFFFFF',
+          '&:hover': {
+            backgroundColor: '#00FFFF',
+            color: '#000000',
+            borderColor: '#000000',
+          },
+        }
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          backgroundImage: 'none',
-        },
-        elevation: {
-          boxShadow: 'none',
-        },
-        elevation1: {
-          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
-        }
-      },
-    },
-    MuiChip: {
-      styleOverrides: {
-        root: {
-          fontWeight: 500,
+          borderRadius: 0,
+          border: '2px solid #555555',
+          boxShadow: '4px 4px 0px #00FFFF',
         },
       },
     },
     MuiDialog: {
-      styleOverrides: {
-        paper: {
-          border: '1px solid rgba(100, 125, 150, 0.3)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
-        },
-      },
+        styleOverrides: {
+            paper: {
+                border: '2px solid #FF00FF',
+                boxShadow: '6px 6px 0px #FF00FF',
+            }
+        }
     },
     MuiTextField: {
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
+            borderRadius: 0,
+            backgroundColor: '#000',
             '& fieldset': {
-              borderColor: 'rgba(100, 125, 150, 0.3)',
+              borderWidth: '2px',
+              borderColor: '#AAAAAA',
             },
             '&:hover fieldset': {
-              borderColor: '#4dabf7',
+              borderColor: '#00FFFF',
             },
             '&.Mui-focused fieldset': {
-              borderColor: '#4dabf7',
+              borderColor: '#FF00FF',
             },
           },
         },
       },
     },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 0,
+          border: '2px solid transparent',
+          '&:hover': {
+            backgroundColor: 'rgba(0, 255, 255, 0.2)',
+            borderColor: '#00FFFF',
+          },
+        },
+      },
+    },
+    MuiMenu: {
+        styleOverrides: {
+            paper: {
+                border: '2px solid #AAAAAA',
+                boxShadow: '4px 4px 0px #AAAAAA',
+            }
+        }
+    },
+    MuiListItem: {
+        styleOverrides: {
+            root: {
+                borderRadius: 0,
+                transition: 'background-color 0.1s linear',
+                '&:hover': {
+                    backgroundColor: 'rgba(0, 255, 255, 0.1)',
+                }
+            }
+        }
+    },
+    MuiTooltip: {
+        styleOverrides: {
+            tooltip: {
+                borderRadius: 0,
+                border: '2px solid #AAAAAA',
+                backgroundColor: '#000000',
+                color: '#FFFFFF',
+                fontFamily: '"Press Start 2P", cursive',
+                fontSize: '0.75rem',
+                boxShadow: '4px 4px 0px #AAAAAA',
+            }
+        }
+    }
   },
 });
 
-export default theme;
+export default retroTheme;

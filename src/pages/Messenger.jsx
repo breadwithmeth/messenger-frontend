@@ -37,7 +37,7 @@ function ChatBubble({ message, isMe }) {
         bgcolor: isMe ? 'primary.main' : 'background.paper',
         color: isMe ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary,
         p: '12px 16px',
-        borderRadius: '16px',
+        borderRadius: '1px',
         mb: 1,
         maxWidth: '75%',
         boxShadow: '0 2px 5px rgba(0,0,0,0.15)',
@@ -237,7 +237,7 @@ function ChatInput({ value, onChange, onSend, disabled, onRewrite, isRewriting }
             mr: 1,
             ml: 1,
             '& .MuiOutlinedInput-root': {
-              borderRadius: '20px',
+              borderRadius: '2px',
             }
           }}
           InputProps={{
