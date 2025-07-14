@@ -64,94 +64,104 @@ export default function ChatInfoSidebar({ chat, onPhoneUpdate }) {
   return (
     <Box
       sx={{
-        width: 280,
-        minWidth: 280,
+        width: 300,
+        minWidth: 300,
         borderLeft: 1,
         borderColor: 'divider',
         bgcolor: 'background.paper',
         display: 'flex',
         flexDirection: 'column',
-        overflow: 'hidden',
+        height: '100vh',
         position: 'sticky',
-        right: 0,
-        height: '100vh'
+        top: 0,
       }}
     >
-      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Typography variant="h6" sx={{ mb: 2 }}>
+      <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider', minHeight: '64px', display: 'flex', alignItems: 'center' }}>
+        <Typography variant="h6">
           Информация
         </Typography>
       </Box>
 
       <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
-        {chat && (
+        {chat ? (
           <>
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              Получатель
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 2 }}>
-              {chat?.name || chat?.remoteJid?.split('@')[0] || 'Неизвестно'}
-            </Typography>
+            <Box mb={3}>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Получатель
+              </Typography>
+              <Typography variant="body1" fontWeight="medium">
+                {chat?.name || chat?.remoteJid?.split('@')[0] || 'Неизвестно'}
+              </Typography>
+            </Box>
 
             <Divider sx={{ my: 2 }} />
 
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              Номер WhatsApp
-            </Typography>
-          </>
-        )}
-        {phoneInfo && (
-          <List disablePadding>
-            <ListItem sx={{ px: 0 }}>
-              <ListItemText
-                primary={phoneInfo.displayName}
-                secondary={phoneInfo.phoneJid?.split('@')[0]}
-              />
-            </ListItem>
-            <ListItem sx={{ px: 0 }}>
-              <Chip
-                size="small"
-                label={STATUS_LABELS[phoneInfo.status]}
-                color={STATUS_COLORS[phoneInfo.status]}
-              />
-            </ListItem>
-            {phoneInfo.lastConnectedAt && (
-              <ListItem sx={{ px: 0 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Последнее подключение:<br />
-                  {new Date(phoneInfo.lastConnectedAt).toLocaleString()}
-                </Typography>
-              </ListItem>
-            )}
-          </List>
-        )}
+            <Box mb={3}>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Номер WhatsApp
+              </Typography>
+              {phoneInfo ? (
+                <List disablePadding>
+                  <ListItem sx={{ px: 0 }}>
+                    <ListItemText
+                      primary={phoneInfo.displayName}
+                      secondary={phoneInfo.phoneJid?.split('@')[0]}
+                    />
+                  </ListItem>
+                  <ListItem sx={{ px: 0 }}>
+                    <Chip
+                      size="small"
+                      label={STATUS_LABELS[phoneInfo.status] || 'Неизвестен'}
+                      color={STATUS_COLORS[phoneInfo.status] || 'default'}
+                      variant="outlined"
+                    />
+                  </ListItem>
+                  {phoneInfo.lastConnectedAt && (
+                    <ListItem sx={{ px: 0 }}>
+                      <Typography variant="caption" color="text.secondary">
+                        Последнее подключение:<br />
+                        {new Date(phoneInfo.lastConnectedAt).toLocaleString()}
+                      </Typography>
+                    </ListItem>
+                  )}
+                </List>
+              ) : (
+                <Typography variant="body2" color="text.secondary">Загрузка...</Typography>
+              )}
+            </Box>
 
-        <Divider sx={{ my: 2 }} />
+            <Divider sx={{ my: 2 }} />
 
-        {chat && (
-          <>
-            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
-              Статистика
-            </Typography>
-            <List disablePadding>
-              <ListItem sx={{ px: 0 }}>
-                <ListItemText
-                  primary="Создан"
-                  secondary={chat?.createdAt ? new Date(chat.createdAt).toLocaleDateString() : 'Неизвестно'}
-                />
-              </ListItem>
-              <ListItem sx={{ px: 0 }}>
-                <ListItemText
-                  primary="Последнее сообщение"
-                  secondary={
-                    chat?.lastMessage?.timestamp 
-                      ? new Date(chat.lastMessage.timestamp).toLocaleString() 
-                      : 'Нет сообщений'
-                  }
-                />
-              </ListItem>
-            </List>
+            <Box>
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Статистика
+              </Typography>
+              <List disablePadding>
+                <ListItem sx={{ px: 0 }}>
+                  <ListItemText
+                    primary="Создан"
+                    secondary={chat?.createdAt ? new Date(chat.createdAt).toLocaleDateString() : 'Неизвестно'}
+                  />
+                </ListItem>
+                <ListItem sx={{ px: 0 }}>
+                  <ListItemText
+                    primary="Последнее сообщение"
+                    secondary={
+                      chat?.lastMessage?.timestamp 
+                        ? new Date(chat.lastMessage.timestamp).toLocaleString() 
+                        : 'Нет сообщений'
+                    }
+                  />
+                </ListItem>
+              </List>
+            </Box>
           </>
+        ) : (
+          <Box sx={{textAlign: 'center', mt: 4}}>
+            <Typography color="text.secondary">
+              Выберите чат для просмотра информации
+            </Typography>
+          </Box>
         )}
       </Box>
     </Box>

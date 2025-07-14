@@ -27,13 +27,15 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
       square
       sx={{
         width: 320,
-        height: '100%',
+        height: '100vh',
         borderRight: 1,
         borderColor: 'divider',
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
-        bgcolor: 'background.paper'
+        bgcolor: 'background.paper',
+        position: 'sticky',
+        top: 0,
       }}
     >
       <Box
@@ -43,7 +45,8 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
           borderColor: 'divider',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'space-between'
+          justifyContent: 'space-between',
+          minHeight: '64px',
         }}
       >
         <Typography variant="h6" fontWeight="bold">
@@ -71,7 +74,7 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
         </Box>
       </Box>
 
-      <List sx={{ flex: 1, overflow: 'auto', px: 0 }}>
+      <List sx={{ flex: 1, overflow: 'auto', p: 1 }}>
         {chats.map((chat) => (
           <ListItem
             key={chat.id}
@@ -79,17 +82,17 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
             selected={selectedChat?.id === chat.id}
             onClick={() => onSelect(chat)}
             sx={{
-              borderLeft: 3,
-              borderColor: selectedChat?.id === chat.id ? 'primary.main' : 'transparent',
+              borderRadius: '8px',
+              mb: 0.5,
               '&:hover': {
-                bgcolor: 'action.hover',
+                backgroundColor: 'rgba(77, 171, 247, 0.1)',
               },
               '&.Mui-selected': {
-                bgcolor: 'action.selected',
+                backgroundColor: 'rgba(77, 171, 247, 0.2)',
                 '&:hover': {
-                  bgcolor: 'action.selected',
+                  backgroundColor: 'rgba(77, 171, 247, 0.25)',
                 },
-              }
+              },
             }}
           >
             <ListItemText

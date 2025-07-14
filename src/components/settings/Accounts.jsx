@@ -1,23 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
-import { 
-  Typography, 
-  Paper, 
-  List, 
-  ListItem, 
-  ListItemText, 
-  Chip, 
-  Button,
-  Box,
-  CircularProgress,
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogActions,
-  TextField
+import {
+  Box, Typography, List, ListItem, ListItemButton, ListItemText,
+  Divider, Button, Dialog, DialogTitle, DialogContent, TextField,
+  DialogActions, IconButton, Tooltip, CircularProgress, Alert,
+  ListItemIcon,
+  Menu,
+  MenuItem
 } from '@mui/material';
-import { QRCodeSVG } from 'qrcode.react';
+import { Add, QrCode, CheckCircle, Error, Refresh, MoreVert } from '@mui/icons-material';
 import api from '../../api';
+import { useNotification } from '../../context/NotificationContext';
 
 const STATUS_COLORS = {
   connected: 'success',
@@ -33,224 +26,243 @@ const STATUS_LABELS = {
   logged_out: 'Выход выполнен'
 };
 
-export default function Accounts() {
+function Accounts() {
   const theme = useTheme();
-  const [phones, setPhones] = useState([]);
+  const [accounts, setAccounts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedQR, setSelectedQR] = useState(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [open, setOpen] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
-  const [newPhoneNumber, setNewPhoneNumber] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [qrCode, setQrCode] = useState(null);
+  const [qrLoading, setQrLoading] = useState(false);
+  const [selectedAccountId, setSelectedAccountId] = useState(null);
+  const [connectingId, setConnectingId] = useState(null);
+  const { showNotification } = useNotification();
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchPhones = async () => {
-      try {
-        setError(null);
-        const data = await api.getOrganizationPhones();
-        if (isMounted) {
-          setPhones(Array.isArray(data) ? data : []);
-        }
-      } catch (err) {
-        if (isMounted) {
-          console.error('Ошибка при загрузке аккаунтов:', err);
-          setError(err.message || 'Не удалось загрузить список аккаунтов');
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
+  // State for menu
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [menuAccountId, setMenuAccountId] = useState(null);
 
-    fetchPhones();
-    // Обновляем список каждые 30 секунд для проверки статусов
-    const interval = setInterval(fetchPhones, 30000);
-    return () => { 
-      isMounted = false; 
-      clearInterval(interval); 
-    };
-  }, []);
-
-  const handleAddAccount = async () => {
-    if (!newAccountName.trim() || !newPhoneNumber.trim()) return;
-    
-    setIsSubmitting(true);
+  const fetchAccounts = async () => {
     try {
-      const phoneJid = `${newPhoneNumber.replace(/\D/g, '')}@s.whatsapp.net`;
-      const newPhone = await api.createOrganizationPhone({
-        phoneJid,
-        displayName: newAccountName
-      });
-      setPhones(prev => [...prev, newPhone]);
-      setIsAddDialogOpen(false);
-      setNewAccountName('');
-      setNewPhoneNumber('');
+      setLoading(true);
+      const data = await api.getWhatsAppAccounts();
+      setAccounts(data);
+      setError(null);
     } catch (err) {
-      console.error('Ошибка при создании аккаунта:', err);
-      setError(err.message || 'Не удалось создать аккаунт');
+      setError('Не удалось загрузить аккаунты.');
+      showNotification('Не удалось загрузить аккаунты', 'error');
     } finally {
-      setIsSubmitting(false);
+      setLoading(false);
     }
   };
 
-  if (loading) {
-    return (
-      <Paper sx={{ p: 4, borderRadius: 3, display: 'flex', justifyContent: 'center' }}>
-        <CircularProgress />
-      </Paper>
-    );
-  }
+  useEffect(() => {
+    fetchAccounts();
+    const interval = setInterval(fetchAccounts, 10000); // Poll every 10 seconds
+    return () => clearInterval(interval);
+  }, []);
 
-  if (error) {
-    return (
-      <Paper sx={{ p: 4, borderRadius: 3 }}>
-        <Typography color="error">Ошибка: {error}</Typography>
-      </Paper>
-    );
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => {
+    setOpen(false);
+    setNewAccountName('');
+  };
+
+  const handleCreate = async () => {
+    if (!newAccountName.trim()) {
+      showNotification('Название аккаунта не может быть пустым', 'warning');
+      return;
+    }
+    try {
+      await api.createWhatsAppAccount({ name: newAccountName });
+      handleClose();
+      fetchAccounts();
+      showNotification('Аккаунт успешно создан', 'success');
+    } catch (err) {
+      showNotification(err.message || 'Не удалось создать аккаунт', 'error');
+    }
+  };
+
+  const handleConnect = async (accountId) => {
+    setConnectingId(accountId);
+    setQrLoading(true);
+    setQrCode(null);
+    setSelectedAccountId(accountId);
+    try {
+      const data = await api.connectWhatsAppAccount(accountId);
+      if (data.qr) {
+        setQrCode(data.qr);
+        showNotification('Отсканируйте QR-код в приложении WhatsApp', 'info');
+      } else {
+        showNotification('Не удалось получить QR-код, попробуйте еще раз', 'warning');
+      }
+    } catch (err) {
+      showNotification(err.message || 'Ошибка при подключении', 'error');
+    } finally {
+      setQrLoading(false);
+      setConnectingId(null);
+    }
+  };
+
+  const handleMenuOpen = (event, accountId) => {
+    setAnchorEl(event.currentTarget);
+    setMenuAccountId(accountId);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+    setMenuAccountId(null);
+  };
+
+  const handleDisconnect = async () => {
+    if (!menuAccountId) return;
+    try {
+      await api.disconnectWhatsAppAccount(menuAccountId);
+      fetchAccounts();
+      showNotification('Аккаунт успешно отключен', 'success');
+    } catch (err) {
+      showNotification(err.message || 'Не удалось отключить аккаунт', 'error');
+    } finally {
+      handleMenuClose();
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!menuAccountId) return;
+    if (!window.confirm('Вы уверены, что хотите удалить этот аккаунт? Это действие необратимо.')) {
+        return;
+    }
+    try {
+      await api.deleteWhatsAppAccount(menuAccountId);
+      fetchAccounts();
+      showNotification('Аккаунт успешно удален', 'success');
+    } catch (err) {
+      showNotification(err.message || 'Не удалось удалить аккаунт', 'error');
+    } finally {
+      handleMenuClose();
+    }
+  };
+
+
+  if (loading && accounts.length === 0) {
+    return <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}><CircularProgress /></Box>;
   }
 
   return (
-    <Paper 
-      sx={{ 
-        p: 4, 
-        borderRadius: 3,
-        bgcolor: 'background.paper',
-        border: '1px solid',
-        borderColor: 'rgba(148, 163, 184, 0.1)',
-        backdropFilter: 'blur(8px)',
-        boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3)'
-      }}
-    >
-      <Box sx={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        mb: 4
-      }}>
-        <Typography variant="h4" sx={{ color: 'text.primary' }}>
-          Управление аккаунтами WhatsApp
-        </Typography>
-        <Button 
-          variant="contained" 
-          color="primary"
-          onClick={() => setIsAddDialogOpen(true)}
-          startIcon={<span>+</span>}
-          sx={{
-            px: 3,
-            py: 1,
-            fontSize: '0.95rem'
-          }}
-        >
-          Добавить аккаунт
-        </Button>
-      </Box>
+    <Box sx={{ p: 4, bgcolor: 'background.default', minHeight: '100vh' }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Управление аккаунтами WhatsApp
+      </Typography>
 
-      <List sx={{ gap: 2, display: 'flex', flexDirection: 'column' }}>
-        {phones.map((phone) => (
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleOpen}
+        startIcon={<Add />}
+        sx={{ mb: 3 }}
+      >
+        Добавить аккаунт
+      </Button>
+
+      <List>
+        {accounts.map((account) => (
           <ListItem
-            key={phone.id}
-            sx={{
-              p: 3,
-              border: '1px solid',
-              borderColor: 'rgba(148, 163, 184, 0.1)',
-              borderRadius: 2,
-              bgcolor: 'background.paper',
-              transition: 'all 0.2s ease-in-out',
-              backdropFilter: 'blur(8px)',
-              '&:hover': {
-                borderColor: theme.palette.primary.main,
-                transform: 'translateY(-1px)',
-                boxShadow: `0 4px 20px -4px ${theme.palette.primary.main}40`
-              }
-            }}
+            key={account.id}
+            secondaryAction={
+              <Box>
+                <IconButton
+                  edge="end"
+                  aria-label="more"
+                  onClick={(e) => handleMenuOpen(e, account.id)}
+                >
+                  <MoreVert />
+                </IconButton>
+                <Menu
+                  anchorEl={anchorEl}
+                  open={Boolean(anchorEl) && menuAccountId === account.id}
+                  onClose={handleMenuClose}
+                >
+                  <MenuItem
+                    onClick={() => {
+                      handleDisconnect();
+                      handleMenuClose();
+                    }}
+                  >
+                    Отключить
+                  </MenuItem>
+                  <MenuItem
+                    onClick={() => {
+                      handleDelete();
+                      handleMenuClose();
+                    }}
+                  >
+                    Удалить
+                  </MenuItem>
+                </Menu>
+              </Box>
+            }
           >
-            <ListItemText
-              primary={
-                <Typography variant="h6" component="div">
-                  {phone.displayName}
-                </Typography>
-              }
-              secondary={
-                <Box sx={{ mt: 1 }}>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {phone.phoneJid.split('@')[0]}
+            <ListItemButton
+              onClick={() => handleConnect(account.id)}
+              disabled={account.status === 'connected' || connectingId === account.id}
+              sx={{
+                border: '1px solid',
+                borderColor: 'rgba(148, 163, 184, 0.2)',
+                borderRadius: 2,
+                p: 2,
+                bgcolor: account.status === 'connected' ? 'rgba(76, 175, 80, 0.1)' : 'inherit',
+                transition: 'background-color 0.3s',
+                '&:hover': {
+                  bgcolor: account.status === 'connected' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(148, 163, 184, 0.04)',
+                },
+              }}
+            >
+              <ListItemIcon>
+                {account.status === 'connected' ? <CheckCircle color="success" /> : <QrCode color="action" />}
+              </ListItemIcon>
+              <ListItemText
+                primary={account.name}
+                secondary={
+                  <Typography variant="body2" color="text.secondary">
+                    {account.status === 'connected' ? 'Подключен' : 'Ожидает сканирования QR-кода'}
                   </Typography>
-                  <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
-                    <Chip
-                      label={STATUS_LABELS[phone.status]}
-                      color={STATUS_COLORS[phone.status]}
-                      size="small"
-                    />
-                    {phone.lastConnectedAt && (
-                      <Typography variant="caption" color="text.secondary">
-                        Последнее подключение: {new Date(phone.lastConnectedAt).toLocaleString()}
-                      </Typography>
-                    )}
-                  </Box>
-                </Box>
-              }
-            />
-            <Box sx={{ ml: 2, display: 'flex', gap: 1 }}>
-              {phone.status === 'disconnected' && (
-                <Button
-                  variant="contained"
-                  size="small"
-                  onClick={async () => {
-                    try {
-                      setError(null);
-                      const updatedPhone = await api.connectOrganizationPhone(phone.id);
-                      setPhones(prev => prev.map(p => 
-                        p.id === updatedPhone.id ? updatedPhone : p
-                      ));
-                    } catch (err) {
-                      console.error('Ошибка при подключении:', err);
-                      setError(err.message || 'Ошибка при подключении телефона');
-                    }
-                  }}
-                  color="primary"
-                  sx={{ 
-                    borderColor: 'primary.main',
-                    '&:hover': {
-                      borderColor: 'primary.dark',
-                      backgroundColor: 'primary.dark'
-                    }
-                  }}
-                >
-                  Подключить
-                </Button>
+                }
+              />
+              {account.status === 'connected' && (
+                <CheckCircle color="success" sx={{ ml: 1 }} />
               )}
-              {phone.status === 'pending' && (
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={() => {
-                    console.log('QR Code:', phone.qrCode); // Для отладки
-                    setSelectedQR(phone.qrCode);
-                  }}
-                  color="primary"
-                  disabled={!phone.qrCode}
-                  sx={{ 
-                    borderColor: 'primary.main',
-                    '&:hover': {
-                      borderColor: 'primary.dark',
-                      backgroundColor: 'rgba(124, 58, 237, 0.04)'
-                    }
-                  }}
-                >
-                  {phone.qrCode ? 'Показать QR-код' : 'QR-код загружается...'}
-                </Button>
-              )}
-            </Box>
+            </ListItemButton>
           </ListItem>
         ))}
       </List>
 
-      <Dialog 
-        open={!!selectedQR} 
-        onClose={() => setSelectedQR(null)}
+      <Dialog open={open} onClose={handleClose}>
+        <DialogTitle>Добавить новый аккаунт</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Название аккаунта"
+            fullWidth
+            variant="outlined"
+            value={newAccountName}
+            onChange={(e) => setNewAccountName(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">
+            Отмена
+          </Button>
+          <Button onClick={handleCreate} color="primary">
+            {loading ? <CircularProgress size={24} color="inherit" /> : 'Создать'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog
+        open={qrLoading}
+        onClose={() => setQrLoading(false)}
         PaperProps={{
           sx: {
             borderRadius: 3,
@@ -262,115 +274,26 @@ export default function Accounts() {
         }}
       >
         <DialogContent sx={{ textAlign: 'center', p: 2 }}>
-          <Box sx={{ 
-            p: 4, 
-            border: '1px solid',
-            borderColor: 'rgba(148, 163, 184, 0.2)',
-            borderRadius: 2, 
-            display: 'inline-block',
-            bgcolor: '#FFFFFF',
-            boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-          }}>
-            <QRCodeSVG
-              value={selectedQR || ''}
-              size={256}
-              level="H"
-              includeMargin={true}
-            />
-          </Box>
-          <Typography 
-            variant="body1" 
-            align="center" 
-            sx={{ 
-              mt: 3,
-              color: 'text.secondary',
-              lineHeight: 1.5
-            }}
-          >
-            Отсканируйте этот QR-код в приложении WhatsApp для подключения
+          <Typography variant="body1" align="center" sx={{ mb: 2 }}>
+            {qrCode ? 'Отсканируйте QR-код в приложении WhatsApp для подключения' : 'Генерация QR-кода...'}
           </Typography>
+          {qrCode && (
+            <Box sx={{ 
+              p: 4, 
+              border: '1px solid',
+              borderColor: 'rgba(148, 163, 184, 0.2)',
+              borderRadius: 2, 
+              display: 'inline-block',
+              bgcolor: '#FFFFFF',
+              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
+            }}>
+              <img src={`data:image/png;base64,${qrCode}`} alt="QR Code" style={{ width: '100%', height: 'auto' }} />
+            </Box>
+          )}
         </DialogContent>
-      </Dialog>
-
-      <Dialog 
-        open={isAddDialogOpen} 
-        onClose={() => !isSubmitting && setIsAddDialogOpen(false)}
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            bgcolor: 'background.paper',
-            maxWidth: '400px',
-            width: '100%'
-          }
-        }}
-      >
-        <DialogTitle sx={{ 
-          pb: 1,
-          pt: 3,
-          px: 3,
-          typography: 'h6',
-          fontWeight: 600 
-        }}>
-          Добавить новый аккаунт WhatsApp
-        </DialogTitle>
-        <DialogContent sx={{ p: 3 }}>
-          <TextField
-            autoFocus
-            margin="dense"
-            label="Номер телефона"
-            fullWidth
-            value={newPhoneNumber}
-            onChange={(e) => setNewPhoneNumber(e.target.value)}
-            disabled={isSubmitting}
-            variant="outlined"
-            placeholder="7705XXXXXXX"
-            sx={{
-              mb: 2,
-              '& .MuiOutlinedInput-root': {
-                '& fieldset': {
-                  borderColor: 'rgba(148, 163, 184, 0.2)',
-                },
-                '&:hover fieldset': {
-                  borderColor: 'rgba(148, 163, 184, 0.3)',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: 'primary.main',
-                },
-              },
-            }}
-          />
-          <TextField
-            margin="dense"
-            label="Название аккаунта"
-            fullWidth
-            value={newAccountName}
-            onChange={(e) => setNewAccountName(e.target.value)}
-            disabled={isSubmitting}
-            variant="outlined"
-            sx={{
-              mt: 1,
-              '& .MuiOutlinedInput-root': {
-                '& fieldset': {
-                  borderColor: 'rgba(148, 163, 184, 0.2)',
-                },
-                '&:hover fieldset': {
-                  borderColor: 'rgba(148, 163, 184, 0.3)',
-                },
-                '&.Mui-focused fieldset': {
-                  borderColor: 'primary.main',
-                },
-              },
-            }}
-          />
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3, gap: 1 }}>
+        <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
           <Button 
-            onClick={() => {
-              setIsAddDialogOpen(false);
-              setNewAccountName('');
-              setNewPhoneNumber('');
-            }} 
-            disabled={isSubmitting}
+            onClick={() => setQrLoading(false)}
             variant="outlined"
             sx={{
               borderColor: 'rgba(148, 163, 184, 0.2)',
@@ -381,20 +304,12 @@ export default function Accounts() {
               },
             }}
           >
-            Отмена
-          </Button>
-          <Button 
-            onClick={handleAddAccount} 
-            disabled={!newAccountName.trim() || !newPhoneNumber.trim() || isSubmitting}
-            variant="contained"
-            sx={{
-              minWidth: '100px',
-            }}
-          >
-            {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Добавить'}
+            Закрыть
           </Button>
         </DialogActions>
       </Dialog>
-    </Paper>
+    </Box>
   );
 }
+
+export default Accounts;

@@ -52,36 +52,50 @@ const api = {
     return response.json();
   },
 
-  // Отправка текстового сообщения
   /**
-   * Отправка текстового сообщения
-   * @param {Object} params
-   * @param {number} params.organizationPhoneId - ID телефона организации
-   * @param {string} params.receiverJid - JID получателя (remoteJid)
-   * @param {string} params.text - Текст сообщения
-   * @returns {Promise<Object>} Ответ API
+   * Имитация вызова API для переписывания текста с помощью Gemini.
+   * @param {string} text Исходный текст.
+   * @returns {Promise<string>} Переписанный текст.
    */
-  sendTextMessage: async ({ organizationPhoneId, receiverJid, text }) => {
-    if (!organizationPhoneId || !receiverJid || !text) {
-      throw new Error('organizationPhoneId, receiverJid и text обязательны для отправки сообщения');
+  rewriteWithGemini: async (text) => {
+    const apiKey = localStorage.getItem('gemini_api_key');
+    if (!apiKey) {
+      throw new Error('API ключ для Gemini не найден. Пожалуйста, добавьте его в настройках.');
     }
-    const body = JSON.stringify({ organizationPhoneId, receiverJid, text });
-    console.log('Отправка текстового сообщения:', body);
-    return api._authorizedFetch('/messages/send-text', {
-      method: 'POST',
-      body,
-    });
+
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+    
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: `Перепиши этот текст, сделай его более профессиональным и вежливым, сохранив основной смысл. Оригинал: "${text}"`
+            }]
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Ошибка от API Gemini:', errorData);
+        throw new Error(errorData.error?.message || 'Не удалось получить ответ от Gemini.');
+      }
+
+      const data = await response.json();
+      return data.candidates[0].content.parts[0].text.trim();
+
+    } catch (error) {
+      console.error('Ошибка при обращении к Gemini API:', error);
+      throw error;
+    }
   },
 
-  // Отправка медиа-сообщения
-  sendMediaMessage: async (jid, type, url, caption, phoneNumber, filename = null) => {
-    return api._authorizedFetch('/messages/send-media', {
-      method: 'POST',
-      body: JSON.stringify({ jid, type, url, caption, phoneNumber, filename }),
-    });
-  },
-
-  // Эти конечные точки должны быть реализованы в вашем бэкенде:
+  // Получение списка чатов
   getChats: async () => {
     return api._authorizedFetch('/chats');
   },

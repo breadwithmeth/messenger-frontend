@@ -6,12 +6,26 @@ import {
   TextField,
   IconButton,
   CircularProgress,
-  Fade
+  Fade,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
+  Tooltip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Button,
+  FormControl,
+  InputLabel,
+  Select,
 } from "@mui/material";
-import { Send as SendIcon } from "@mui/icons-material";
+import { Send as SendIcon, Article as TemplateIcon } from '@mui/icons-material';
 import api from "../api";
 import ChatSidebar from "../components/ChatSidebar";
 import ChatInfoSidebar from "../components/ChatInfoSidebar";
+import { useNotification } from "../context/NotificationContext";
 
 function ChatBubble({ message, isMe }) {
   const theme = useTheme();
@@ -20,13 +34,15 @@ function ChatBubble({ message, isMe }) {
     <Box
       sx={{
         alignSelf: isMe ? 'flex-end' : 'flex-start',
-        bgcolor: isMe ? 'primary.dark' : 'background.paper',
-        p: 2,
-        borderRadius: 2,
+        bgcolor: isMe ? 'primary.main' : 'background.paper',
+        color: isMe ? theme.palette.getContrastText(theme.palette.primary.main) : theme.palette.text.primary,
+        p: '12px 16px',
+        borderRadius: '16px',
         mb: 1,
         maxWidth: '75%',
-        boxShadow: 1,
-        position: 'relative'
+        boxShadow: '0 2px 5px rgba(0,0,0,0.15)',
+        position: 'relative',
+        wordBreak: 'break-word',
       }}
     >
       <Typography variant="body1" color={isMe ? 'common.white' : 'text.primary'}>
@@ -34,7 +50,7 @@ function ChatBubble({ message, isMe }) {
       </Typography>
       <Typography 
         variant="caption" 
-        color={isMe ? 'primary.light' : 'text.secondary'}
+        color={isMe ? 'rgba(255,255,255,0.8)' : 'text.secondary'}
         sx={{ 
           mt: 0.5,
           display: 'block',
@@ -58,7 +74,7 @@ function ChatMessages({ messages, userId, loading }) {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          bgcolor: 'background.default'
+          bgcolor: 'transparent'
         }}
       >
         <Fade in={loading} style={{ transitionDelay: '500ms' }}>
@@ -83,7 +99,7 @@ function ChatMessages({ messages, userId, loading }) {
     <Box
       sx={{
         flex: 1,
-        p: 2,
+        p: 3,
         overflowY: 'auto',
         display: 'flex',
         flexDirection: 'column',
@@ -110,51 +126,195 @@ function ChatMessages({ messages, userId, loading }) {
   );
 }
 
-function ChatInput({ value, onChange, onSend, disabled }) {
+function ChatInput({ value, onChange, onSend, disabled, onTemplateSelect, isRewriting }) {
   const theme = useTheme();
+  const [templates, setTemplates] = useState([]);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const open = Boolean(anchorEl);
+
+  // State for the rewrite options dialog
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [tone, setTone] = useState('professional');
+  const [style, setStyle] = useState('friendly');
+  const [length, setLength] = useState('same');
+
+
+  useEffect(() => {
+    const storedTemplates = JSON.parse(localStorage.getItem('messageTemplates') || '[]');
+    setTemplates(storedTemplates);
+  }, []);
+
+  const handleClick = (event) => {
+    // Обновляем шаблоны перед открытием меню
+    const storedTemplates = JSON.parse(localStorage.getItem('messageTemplates') || '[]');
+    setTemplates(storedTemplates);
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleDialogClose = () => {
+    setDialogOpen(false);
+    setSelectedTemplate(null);
+    // Сбрасываем значения при закрытии
+    setTone('professional');
+    setStyle('friendly');
+    setLength('same');
+  };
+
+  const handleSelect = (template) => {
+    setSelectedTemplate(template);
+    setDialogOpen(true);
+    handleClose();
+  };
+
+  const handleRewrite = () => {
+    if (!selectedTemplate) return;
+    onTemplateSelect({
+      text: selectedTemplate.text,
+      tone,
+      style,
+      length,
+    });
+    handleDialogClose();
+  };
   
   return (
-    <Box
-      component="form"
-      onSubmit={onSend}
-      sx={{
-        display: 'flex',
-        p: 2,
-        borderTop: 1,
-        borderColor: 'divider',
-        bgcolor: 'background.paper'
-      }}
-    >
-      <TextField
-        fullWidth
-        value={value}
-        onChange={onChange}
-        placeholder="Введите сообщение..."
-        disabled={disabled}
-        autoFocus
-        size="small"
-        sx={{ mr: 1 }}
-      />
-      <IconButton
-        type="submit"
-        disabled={disabled || !value.trim()}
-        color="primary"
-        size="large"
+    <>
+      <Box
+        component="form"
+        onSubmit={onSend}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          p: 2,
+          borderTop: 1,
+          borderColor: 'divider',
+          bgcolor: 'background.paper'
+        }}
       >
-        <SendIcon />
-      </IconButton>
-    </Box>
+        <Tooltip title="Использовать шаблон">
+          <IconButton onClick={handleClick} disabled={disabled} sx={{ pb: 0.5 }}>
+            <TemplateIcon />
+          </IconButton>
+        </Tooltip>
+        <Menu
+          anchorEl={anchorEl}
+          open={open}
+          onClose={handleClose}
+        >
+          {templates.length > 0 ? (
+            templates.map(template => (
+              <MenuItem key={template.id} onClick={() => handleSelect(template)}>
+                {template.title}
+              </MenuItem>
+            ))
+          ) : (
+            <MenuItem disabled>Нет сохраненных шаблонов</MenuItem>
+          )}
+        </Menu>
+        <TextField
+          fullWidth
+          multiline
+          maxRows={4}
+          value={value}
+          onChange={onChange}
+          placeholder={isRewriting ? "Улучшаем текст..." : "Введите сообщение..."}
+          disabled={disabled}
+          autoFocus
+          variant="outlined"
+          size="medium"
+          sx={{ 
+            mr: 1,
+            ml: 1,
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '20px',
+            }
+          }}
+          InputProps={{
+            endAdornment: isRewriting && <CircularProgress size={20} sx={{ mr: 1 }} />
+          }}
+        />
+        <IconButton
+          type="submit"
+          disabled={disabled || !value.trim()}
+          color="primary"
+          size="large"
+          sx={{ pb: 0.5 }}
+        >
+          <SendIcon />
+        </IconButton>
+      </Box>
+      <Dialog open={dialogOpen} onClose={handleDialogClose} fullWidth maxWidth="sm">
+        <DialogTitle>Улучшить текст шаблона</DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" gutterBottom sx={{ mt: 2, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
+            {selectedTemplate?.text}
+          </Typography>
+          <FormControl fullWidth margin="normal">
+            <InputLabel id="tone-select-label">Тон</InputLabel>
+            <Select
+              labelId="tone-select-label"
+              value={tone}
+              label="Тон"
+              onChange={(e) => setTone(e.target.value)}
+            >
+              <MenuItem value="professional">Официальный</MenuItem>
+              <MenuItem value="casual">Неформальный</MenuItem>
+              <MenuItem value="humorous">С юмором</MenuItem>
+              <MenuItem value="empathetic">Эмпатичный</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl fullWidth margin="normal">
+            <InputLabel id="style-select-label">Стиль</InputLabel>
+            <Select
+              labelId="style-select-label"
+              value={style}
+              label="Стиль"
+              onChange={(e) => setStyle(e.target.value)}
+            >
+              <MenuItem value="professional">Профессиональный</MenuItem>
+              <MenuItem value="friendly">Дружелюбный</MenuItem>
+              <MenuItem value="poetic">Поэтичный</MenuItem>
+              <MenuItem value="simple">Простой</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl fullWidth margin="normal">
+            <InputLabel id="length-select-label">Длина</InputLabel>
+            <Select
+              labelId="length-select-label"
+              value={length}
+              label="Длина"
+              onChange={(e) => setLength(e.target.value)}
+            >
+              <MenuItem value="shorter">Короче</MenuItem>
+              <MenuItem value="same">Та же</MenuItem>
+              <MenuItem value="longer">Длиннее</MenuItem>
+            </Select>
+          </FormControl>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDialogClose}>Отмена</Button>
+          <Button onClick={handleRewrite} variant="contained">Улучшить</Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }
 
 export default function Messenger() {
   const theme = useTheme();
+  const { showNotification } = useNotification();
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isRewriting, setIsRewriting] = useState(false);
   const [phoneInfo, setPhoneInfo] = useState(null);
   const [phoneInfoLoading, setPhoneInfoLoading] = useState(false);
 
@@ -168,7 +328,11 @@ export default function Messenger() {
           return new Date(getTime(b)) - new Date(getTime(a));
         });
         if (isMounted) setChats(sorted);
-      } catch {}
+      } catch {
+        if (isMounted) {
+          showNotification('Не удалось загрузить чаты', 'error');
+        }
+      }
     };
     fetchChats();
     const interval = setInterval(fetchChats, 5000);
@@ -195,8 +359,11 @@ export default function Messenger() {
           }
         }
       } catch {
-        if (isMounted && isInitial) {
-          setLoading(false);
+        if (isMounted) {
+          showNotification('Не удалось загрузить сообщения', 'error');
+          if (isInitial) {
+            setLoading(false);
+          }
         }
       }
     };
@@ -239,6 +406,7 @@ export default function Messenger() {
       } catch (err) {
         console.error('Ошибка при загрузке информации о телефоне:', err);
         if (isMounted) {
+          showNotification('Не удалось загрузить информацию о телефоне', 'error');
           setPhoneInfoLoading(false);
         }
       }
@@ -256,6 +424,23 @@ export default function Messenger() {
     };
   }, [selectedChat]);
 
+  const handleTemplateSelect = async (options) => {
+    const { text, tone, style, length } = options;
+    setIsRewriting(true);
+    try {
+      const rewrittenText = await api.rewriteWithGemini(text, { tone, style, length });
+      setMessage(rewrittenText);
+      showNotification('Текст успешно улучшен!', 'success');
+    } catch (error) {
+      console.error("Ошибка при переписывании шаблона:", error);
+      showNotification(error.message || 'Ошибка при улучшении текста', 'error');
+      // В случае ошибки просто вставляем исходный текст шаблона
+      setMessage(text);
+    } finally {
+      setIsRewriting(false);
+    }
+  };
+
   const handlePhoneUpdate = (updatedPhone) => {
     setPhoneInfo(updatedPhone);
   };
@@ -271,7 +456,10 @@ export default function Messenger() {
         text: message,
       });
       setMessage('');
-    } catch {}
+      // Не показываем уведомление об успешной отправке, чтобы не засорять интерфейс
+    } catch {
+      showNotification('Ошибка при отправке сообщения', 'error');
+    }
     setSending(false);
   };
 
@@ -280,7 +468,8 @@ export default function Messenger() {
       sx={{
         display: 'flex',
         height: '100vh',
-        bgcolor: 'background.default'
+        bgcolor: 'background.default',
+        overflow: 'hidden',
       }}
     >
       <ChatSidebar chats={chats} selectedChat={selectedChat} onSelect={setSelectedChat} />
@@ -289,9 +478,7 @@ export default function Messenger() {
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          borderLeft: 1,
-          borderColor: 'divider',
-          minWidth: 0 // Важно для корректного переноса контента
+          minWidth: 0
         }}
       >
         {selectedChat ? (
@@ -301,10 +488,13 @@ export default function Messenger() {
                 p: 2,
                 borderBottom: 1,
                 borderColor: 'divider',
-                bgcolor: 'background.paper'
+                bgcolor: 'background.paper',
+                display: 'flex',
+                alignItems: 'center',
+                minHeight: '64px',
               }}
             >
-              <Typography variant="subtitle1" fontWeight="medium">
+              <Typography variant="h6" fontWeight="medium" noWrap>
                 {selectedChat.name || selectedChat.remoteJid || selectedChat.receivingPhoneJid}
               </Typography>
             </Box>
@@ -313,7 +503,9 @@ export default function Messenger() {
               value={message}
               onChange={e => setMessage(e.target.value)}
               onSend={handleSend}
-              disabled={sending}
+              disabled={sending || isRewriting}
+              onTemplateSelect={handleTemplateSelect}
+              isRewriting={isRewriting}
             />
           </>
         ) : (

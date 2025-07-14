@@ -1,8 +1,10 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
 import { Box, Paper, List, ListItemButton, ListItemIcon, ListItemText, Typography, IconButton, Tooltip, Divider } from '@mui/material';
-import { Users, ArrowLeft } from 'lucide-react';
+import { Users, MessageSquareText, KeyRound, ArrowLeft } from 'lucide-react';
 import Accounts from '../components/settings/Accounts';
+import Templates from '../components/settings/Templates';
+import ApiKeys from '../components/settings/ApiKeys';
 
 const navLinkStyles = {
   '&.active': {
@@ -50,15 +52,28 @@ export default function Settings() {
             </ListItemIcon>
             <ListItemText primary="Аккаунты" />
           </ListItemButton>
-          {/* Здесь можно добавить другие пункты настроек */}
+          <ListItemButton component={NavLink} to="templates" sx={navLinkStyles}>
+            <ListItemIcon>
+              <MessageSquareText />
+            </ListItemIcon>
+            <ListItemText primary="Шаблоны" />
+          </ListItemButton>
+          <ListItemButton component={NavLink} to="api-keys" sx={navLinkStyles}>
+            <ListItemIcon>
+              <KeyRound />
+            </ListItemIcon>
+            <ListItemText primary="API Ключи" />
+          </ListItemButton>
         </List>
       </Paper>
 
       {/* Content Area */}
-      <Box component="main" sx={{ flexGrow: 1, p: 3, overflowY: 'auto' }}>
+      <Box component="main" sx={{ flexGrow: 1, p: 3, overflow: 'auto' }}>
         <Routes>
           <Route path="/" element={<Navigate to="accounts" replace />} />
           <Route path="accounts" element={<Accounts />} />
+          <Route path="templates" element={<Templates />} />
+          <Route path="api-keys" element={<ApiKeys />} />
         </Routes>
       </Box>
     </Box>

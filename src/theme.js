@@ -4,60 +4,90 @@ const theme = createTheme({
   palette: {
     mode: 'dark',
     primary: {
-      main: '#3F51B5', // Тёмно-синий индиго
-      light: '#5C6BC0',
-      dark: '#303F9F',
+      main: '#4dabf7', // Яркий, но не кричащий синий
+      light: '#74c0fc',
+      dark: '#228be6',
     },
     secondary: {
-      main: '#03DAC6', // Бирюзовый
-      light: '#66FFF5',
-      dark: '#018786',
+      main: '#f06595', // Приглушенный розовый
+      light: '#f78fb7',
+      dark: '#d6336c',
     },
     background: {
-      default: '#121212', // Глубокий темно-серый
-      paper: '#1E1E1E', // Немного светлее
+      default: '#0B1929', // Очень темный синий, почти черный
+      paper: '#152E4D',   // Глубокий синий для поверхностей
     },
     text: {
-      primary: '#FFFFFF',
-      secondary: '#B3B3B3',
+      primary: '#E0E0E0',
+      secondary: '#A0AEC0',
     },
-    divider: 'rgba(255, 255, 255, 0.12)',
+    divider: 'rgba(100, 125, 150, 0.3)',
+    success: {
+      main: '#4CAF50',
+    },
+    error: {
+      main: '#F44336',
+    },
+    warning: {
+      main: '#FF9800',
+    },
   },
   typography: {
     fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
     h4: {
-      fontWeight: 600,
+      fontWeight: 700,
       letterSpacing: '-0.02em',
     },
     h6: {
+      fontWeight: 600,
+    },
+    subtitle1: {
       fontWeight: 500,
-      letterSpacing: '-0.01em',
     },
     button: {
-      fontWeight: 500,
+      fontWeight: 600,
+      textTransform: 'none',
     },
   },
   shape: {
-    borderRadius: 4,
+    borderRadius: 12,
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          scrollbarColor: '#6b6b6b #2b2b2b',
+          '&::-webkit-scrollbar, & *::-webkit-scrollbar': {
+            backgroundColor: 'rgba(0, 0, 0, 0.1)',
+            width: '8px',
+          },
+          '&::-webkit-scrollbar-thumb, & *::-webkit-scrollbar-thumb': {
+            borderRadius: 8,
+            backgroundColor: '#4dabf7',
+            minHeight: 24,
+            border: '1px solid #0B1929',
+          },
+          '&::-webkit-scrollbar-thumb:focus, & *::-webkit-scrollbar-thumb:focus': {
+            backgroundColor: '#228be6',
+          },
+          '&::-webkit-scrollbar-thumb:active, & *::-webkit-scrollbar-thumb:active': {
+            backgroundColor: '#228be6',
+          },
+          '&::-webkit-scrollbar-thumb:hover, & *::-webkit-scrollbar-thumb:hover': {
+            backgroundColor: '#74c0fc',
+          },
+          '&::-webkit-scrollbar-corner, & *::-webkit-scrollbar-corner': {
+            backgroundColor: '#2b2b2b',
+          },
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
-          textTransform: 'none',
-          borderRadius: 8,
-          padding: '8px 16px',
-        },
-        contained: {
           boxShadow: 'none',
           '&:hover': {
             boxShadow: 'none',
-          },
-        },
-        outlined: {
-          borderWidth: '1.5px',
-          '&:hover': {
-            borderWidth: '1.5px',
           },
         },
       },
@@ -66,14 +96,18 @@ const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: 'none',
+        },
+        elevation: {
           boxShadow: 'none',
         },
+        elevation1: {
+          boxShadow: '0px 4px 20px rgba(0, 0, 0, 0.1)',
+        }
       },
     },
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 6,
           fontWeight: 500,
         },
       },
@@ -81,8 +115,25 @@ const theme = createTheme({
     MuiDialog: {
       styleOverrides: {
         paper: {
-          backgroundImage: 'none',
-          boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3)',
+          border: '1px solid rgba(100, 125, 150, 0.3)',
+          boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+        },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          '& .MuiOutlinedInput-root': {
+            '& fieldset': {
+              borderColor: 'rgba(100, 125, 150, 0.3)',
+            },
+            '&:hover fieldset': {
+              borderColor: '#4dabf7',
+            },
+            '&.Mui-focused fieldset': {
+              borderColor: '#4dabf7',
+            },
+          },
         },
       },
     },
