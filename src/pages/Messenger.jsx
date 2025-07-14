@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
 import { useTheme } from "@mui/material/styles";
-import { 
-  Box, 
-  Paper, 
-  Typography, 
-  TextField, 
-  Button, 
-  Divider,
-  IconButton 
+import {
+  Box,
+  Typography,
+  TextField,
+  IconButton,
+  CircularProgress,
+  Fade
 } from "@mui/material";
 import { Send as SendIcon } from "@mui/icons-material";
 import api from "../api";
 import ChatSidebar from "../components/ChatSidebar";
+import ChatInfoSidebar from "../components/ChatInfoSidebar";
 
 function ChatBubble({ message, isMe }) {
   const theme = useTheme();
@@ -47,9 +47,27 @@ function ChatBubble({ message, isMe }) {
   );
 }
 
-function ChatMessages({ messages, userId }) {
+function ChatMessages({ messages, userId, loading }) {
   const theme = useTheme();
   
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'background.default'
+        }}
+      >
+        <Fade in={loading} style={{ transitionDelay: '500ms' }}>
+          <CircularProgress />
+        </Fade>
+      </Box>
+    );
+  }
+
   const groupByDate = (msgs) => {
     const groups = {};
     msgs.forEach(msg => {
@@ -130,11 +148,15 @@ function ChatInput({ value, onChange, onSend, disabled }) {
 }
 
 export default function Messenger() {
+  const theme = useTheme();
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [phoneInfo, setPhoneInfo] = useState(null);
+  const [phoneInfoLoading, setPhoneInfoLoading] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -156,18 +178,87 @@ export default function Messenger() {
   useEffect(() => {
     if (!selectedChat) return;
     let isMounted = true;
-    const fetchMessages = async () => {
+    
+    // Показываем загрузку только при первоначальном выборе чата
+    setLoading(true);
+    
+    const fetchMessages = async (isInitial = false) => {
       try {
         const data = await api.getMessagesByChatId(selectedChat.id);
         let msgs = Array.isArray(data) ? data : data.messages;
         msgs = msgs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-        if (isMounted) setMessages(msgs);
-      } catch {}
+        if (isMounted) {
+          setMessages(msgs);
+          // Убираем индикатор загрузки только после первоначальной загрузки
+          if (isInitial) {
+            setLoading(false);
+          }
+        }
+      } catch {
+        if (isMounted && isInitial) {
+          setLoading(false);
+        }
+      }
     };
-    fetchMessages();
-    const interval = setInterval(fetchMessages, 5000);
-    return () => { isMounted = false; clearInterval(interval); };
+
+    // Первоначальная загрузка с индикатором
+    fetchMessages(true);
+    
+    // Периодическое обновление без индикатора загрузки
+    const interval = setInterval(() => {
+      fetchMessages(false);
+    }, 5000);
+    
+    return () => { 
+      isMounted = false; 
+      clearInterval(interval); 
+    };
   }, [selectedChat]);
+
+  // Загрузка информации о телефоне при выборе чата
+  useEffect(() => {
+    if (!selectedChat) {
+      setPhoneInfo(null);
+      return;
+    }
+
+    let isMounted = true;
+
+    const fetchPhoneInfo = async () => {
+      try {
+        setPhoneInfoLoading(true);
+        const phones = await api.getOrganizationPhones();
+        const phoneId = selectedChat.organizationPhone?.id || selectedChat.organizationPhoneId;
+        const phone = phones.find(p => p.id === phoneId);
+        if (isMounted) {
+          if (phone) {
+            setPhoneInfo(phone);
+          }
+          setPhoneInfoLoading(false);
+        }
+      } catch (err) {
+        console.error('Ошибка при загрузке информации о телефоне:', err);
+        if (isMounted) {
+          setPhoneInfoLoading(false);
+        }
+      }
+    };
+
+    // Начальная загрузка
+    fetchPhoneInfo();
+
+    // Обновление каждые 10 секунд
+    const interval = setInterval(fetchPhoneInfo, 10000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [selectedChat]);
+
+  const handlePhoneUpdate = (updatedPhone) => {
+    setPhoneInfo(updatedPhone);
+  };
 
   const handleSend = async (e) => {
     e.preventDefault();
@@ -184,8 +275,6 @@ export default function Messenger() {
     setSending(false);
   };
 
-  const theme = useTheme();
-  
   return (
     <Box
       sx={{
@@ -201,7 +290,8 @@ export default function Messenger() {
           display: 'flex',
           flexDirection: 'column',
           borderLeft: 1,
-          borderColor: 'divider'
+          borderColor: 'divider',
+          minWidth: 0 // Важно для корректного переноса контента
         }}
       >
         {selectedChat ? (
@@ -218,7 +308,7 @@ export default function Messenger() {
                 {selectedChat.name || selectedChat.remoteJid || selectedChat.receivingPhoneJid}
               </Typography>
             </Box>
-            <ChatMessages messages={messages} userId={null} />
+            <ChatMessages messages={messages} userId={null} loading={loading} />
             <ChatInput
               value={message}
               onChange={e => setMessage(e.target.value)}
@@ -241,6 +331,7 @@ export default function Messenger() {
           </Box>
         )}
       </Box>
+      <ChatInfoSidebar chat={selectedChat} onPhoneUpdate={handlePhoneUpdate} />
     </Box>
   );
 }
