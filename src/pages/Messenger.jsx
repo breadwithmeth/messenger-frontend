@@ -452,7 +452,7 @@ export default function Messenger() {
     try {
       await api.sendTextMessage({
         organizationPhoneId: selectedChat.organizationPhone?.id || selectedChat.organizationPhoneId,
-        receiverJid: selectedChat.remoteJid,
+        receiverJid: selectedChat.remoteJid || selectedChat.receivingPhoneJid,
         text: message,
       });
       setMessage('');

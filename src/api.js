@@ -95,6 +95,14 @@ const api = {
     }
   },
 
+  // Отправка текстового сообщения
+  sendTextMessage: async ({ organizationPhoneId, receiverJid, text }) => {
+    return api._authorizedFetch('/messages/send-text', {
+      method: 'POST',
+      body: JSON.stringify({ organizationPhoneId, receiverJid, text }),
+    });
+  },
+
   // Получение списка чатов
   getChats: async () => {
     return api._authorizedFetch('/chats');
