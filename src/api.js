@@ -57,11 +57,25 @@ const api = {
    * @param {string} text Исходный текст.
    * @returns {Promise<string>} Переписанный текст.
    */
-  rewriteWithGemini: async (text) => {
+  rewriteWithGemini: async (text, options = {}) => {
+    const { tone = 'professional', style = 'friendly', length = 'same' } = options;
+
     const apiKey = localStorage.getItem('gemini_api_key');
     if (!apiKey) {
       throw new Error('API ключ для Gemini не найден. Пожалуйста, добавьте его в настройках.');
     }
+
+    // Формируем промпт на основе опций
+    const prompt = `
+      Перепиши следующий текст
+
+      Оригинальный текст: "${text}"
+
+      Требования к результату:
+      - Тон: ${tone}
+      - Стиль: ${style}
+      - Длина: ${length}
+    `;
 
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
     
@@ -74,7 +88,7 @@ const api = {
         body: JSON.stringify({
           contents: [{
             parts: [{
-              text: `Перепиши этот текст, сделай его более профессиональным и вежливым, сохранив основной смысл. Оригинал: "${text}"`
+              text: prompt
             }]
           }]
         })

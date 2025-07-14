@@ -266,6 +266,7 @@ function ChatInput({ value, onChange, onSend, disabled, onTemplateSelect, isRewr
               <MenuItem value="casual">Неформальный</MenuItem>
               <MenuItem value="humorous">С юмором</MenuItem>
               <MenuItem value="empathetic">Эмпатичный</MenuItem>
+              <MenuItem value="passive-aggressive">Пассивно-агрессивный</MenuItem>
             </Select>
           </FormControl>
           <FormControl fullWidth margin="normal">
