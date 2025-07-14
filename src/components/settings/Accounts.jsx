@@ -11,6 +11,7 @@ import {
 import { Add, QrCode, CheckCircle, Error, Refresh, MoreVert } from '@mui/icons-material';
 import api from '../../api';
 import { useNotification } from '../../context/NotificationContext';
+import QRCode from 'qrcode';
 
 const STATUS_COLORS = {
   connected: 'success',
@@ -92,7 +93,12 @@ function Accounts() {
     try {
       const data = await api.connectWhatsAppAccount(accountId);
       if (data.qr) {
-        setQrCode(data.qr);
+        // Генерируем QR-код из строки
+        const qrDataURL = await QRCode.toDataURL(data.qr, {
+          width: 256,
+          margin: 2,
+        });
+        setQrCode(qrDataURL);
         showNotification('Отсканируйте QR-код в приложении WhatsApp', 'info');
       } else {
         showNotification('Не удалось получить QR-код, попробуйте еще раз', 'warning');
@@ -165,74 +171,80 @@ function Accounts() {
         Добавить аккаунт
       </Button>
 
-      <List>
+      {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
+
+      <List sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: 2 }}>
         {accounts.map((account) => (
           <ListItem
             key={account.id}
-            secondaryAction={
-              <Box>
-                <IconButton
-                  edge="end"
-                  aria-label="more"
-                  onClick={(e) => handleMenuOpen(e, account.id)}
-                >
-                  <MoreVert />
-                </IconButton>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={Boolean(anchorEl) && menuAccountId === account.id}
-                  onClose={handleMenuClose}
-                >
-                  <MenuItem
-                    onClick={() => {
-                      handleDisconnect();
-                      handleMenuClose();
-                    }}
-                  >
-                    Отключить
-                  </MenuItem>
-                  <MenuItem
-                    onClick={() => {
-                      handleDelete();
-                      handleMenuClose();
-                    }}
-                  >
-                    Удалить
-                  </MenuItem>
-                </Menu>
-              </Box>
-            }
+            sx={{
+              p: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              border: '1px solid',
+              borderColor: 'divider',
+              borderRadius: 2,
+              bgcolor: 'background.paper',
+              boxShadow: 1,
+              transition: 'box-shadow 0.3s',
+              '&:hover': {
+                boxShadow: 3,
+              }
+            }}
           >
-            <ListItemButton
-              onClick={() => handleConnect(account.id)}
-              disabled={account.status === 'connected' || connectingId === account.id}
-              sx={{
-                border: '1px solid',
-                borderColor: 'rgba(148, 163, 184, 0.2)',
-                borderRadius: 2,
-                p: 2,
-                bgcolor: account.status === 'connected' ? 'rgba(76, 175, 80, 0.1)' : 'inherit',
-                transition: 'background-color 0.3s',
-                '&:hover': {
-                  bgcolor: account.status === 'connected' ? 'rgba(76, 175, 80, 0.2)' : 'rgba(148, 163, 184, 0.04)',
-                },
-              }}
-            >
-              <ListItemIcon>
-                {account.status === 'connected' ? <CheckCircle color="success" /> : <QrCode color="action" />}
-              </ListItemIcon>
-              <ListItemText
-                primary={account.name}
-                secondary={
-                  <Typography variant="body2" color="text.secondary">
-                    {account.status === 'connected' ? 'Подключен' : 'Ожидает сканирования QR-кода'}
-                  </Typography>
-                }
-              />
-              {account.status === 'connected' && (
-                <CheckCircle color="success" sx={{ ml: 1 }} />
+            <Box sx={{ p: 2, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
+                {account.displayName || 'Без имени'}
+              </Typography>
+              <IconButton
+                edge="end"
+                aria-label="more"
+                onClick={(e) => handleMenuOpen(e, account.id)}
+              >
+                <MoreVert />
+              </IconButton>
+            </Box>
+            <Divider sx={{ width: '100%' }} />
+            <Box sx={{ p: 2, width: '100%' }}>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                JID: {account.phoneJid}
+              </Typography>
+              <Typography variant="body2" color="text.secondary" gutterBottom>
+                Статус: <Box component="span" sx={{ color: `${STATUS_COLORS[account.status]}.main`, fontWeight: 'bold' }}>
+                  {STATUS_LABELS[account.status] || account.status}
+                </Box>
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Последнее подключение: {account.lastConnectedAt ? new Date(account.lastConnectedAt).toLocaleString() : 'Никогда'}
+              </Typography>
+            </Box>
+            <Divider sx={{ width: '100%' }} />
+            <Box sx={{ p: 2, width: '100%', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              {account.status !== 'connected' && (
+                <Button
+                  onClick={() => handleConnect(account.id)}
+                  disabled={connectingId === account.id}
+                  startIcon={connectingId === account.id ? <CircularProgress size={20} /> : <QrCode />}
+                >
+                  {connectingId === account.id ? 'Загрузка QR' : 'Подключить'}
+                </Button>
               )}
-            </ListItemButton>
+              {selectedAccountId === account.id && qrLoading && <CircularProgress size={24} />}
+            </Box>
+            {selectedAccountId === account.id && qrCode && (
+              <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', textAlign: 'center' }}>
+                <Typography variant="body2" sx={{ mb: 1 }}>Отсканируйте QR-код</Typography>
+                <img src={qrCode} alt="QR Code" style={{ width: '100%', maxWidth: '256px', height: 'auto' }} />
+              </Box>
+            )}
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl) && menuAccountId === account.id}
+              onClose={handleMenuClose}
+            >
+              <MenuItem onClick={handleDisconnect}>Отключить</MenuItem>
+              <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>Удалить</MenuItem>
+            </Menu>
           </ListItem>
         ))}
       </List>

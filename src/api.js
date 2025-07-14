@@ -109,6 +109,37 @@ const api = {
     }
   },
 
+  // --- Методы для управления аккаунтами WhatsApp ---
+
+  getWhatsAppAccounts: async () => {
+    return api._authorizedFetch('/organization-phones/all');
+  },
+
+  createWhatsAppAccount: async ({ name }) => {
+    return api._authorizedFetch('/organization-phones', {
+      method: 'POST',
+      body: JSON.stringify({ displayName: name }), // Используем displayName как имя
+    });
+  },
+
+  connectWhatsAppAccount: async (accountId) => {
+    return api._authorizedFetch(`/organization-phones/${accountId}/connect`, {
+      method: 'POST',
+    });
+  },
+
+  disconnectWhatsAppAccount: async (accountId) => {
+    return api._authorizedFetch(`/organization-phones/${accountId}/disconnect`, {
+      method: 'POST',
+    });
+  },
+
+  deleteWhatsAppAccount: async (accountId) => {
+    return api._authorizedFetch(`/organization-phones/${accountId}`, {
+      method: 'DELETE',
+    });
+  },
+
   // Отправка текстового сообщения
   sendTextMessage: async ({ organizationPhoneId, receiverJid, text }) => {
     return api._authorizedFetch('/messages/send-text', {
