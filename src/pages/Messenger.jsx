@@ -21,7 +21,7 @@ import {
   InputLabel,
   Select,
 } from "@mui/material";
-import { Send as SendIcon, Article as TemplateIcon } from '@mui/icons-material';
+import { Send as SendIcon, Article as TemplateIcon, AutoAwesome as ImproveIcon } from '@mui/icons-material';
 import api from "../api";
 import ChatSidebar from "../components/ChatSidebar";
 import ChatInfoSidebar from "../components/ChatInfoSidebar";
@@ -126,7 +126,7 @@ function ChatMessages({ messages, userId, loading }) {
   );
 }
 
-function ChatInput({ value, onChange, onSend, disabled, onTemplateSelect, isRewriting }) {
+function ChatInput({ value, onChange, onSend, disabled, onRewrite, isRewriting }) {
   const theme = useTheme();
   const [templates, setTemplates] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -134,7 +134,7 @@ function ChatInput({ value, onChange, onSend, disabled, onTemplateSelect, isRewr
 
   // State for the rewrite options dialog
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [textToRewrite, setTextToRewrite] = useState(null);
   const [tone, setTone] = useState('professional');
   const [style, setStyle] = useState('friendly');
   const [length, setLength] = useState('same');
@@ -158,23 +158,29 @@ function ChatInput({ value, onChange, onSend, disabled, onTemplateSelect, isRewr
 
   const handleDialogClose = () => {
     setDialogOpen(false);
-    setSelectedTemplate(null);
+    setTextToRewrite(null);
     // Сбрасываем значения при закрытии
     setTone('professional');
     setStyle('friendly');
     setLength('same');
   };
 
-  const handleSelect = (template) => {
-    setSelectedTemplate(template);
+  const handleSelectTemplate = (template) => {
+    setTextToRewrite(template.text);
     setDialogOpen(true);
     handleClose();
   };
 
-  const handleRewrite = () => {
-    if (!selectedTemplate) return;
-    onTemplateSelect({
-      text: selectedTemplate.text,
+  const handleImproveMessage = () => {
+    if (!value.trim()) return;
+    setTextToRewrite(value);
+    setDialogOpen(true);
+  };
+
+  const handleConfirmRewrite = () => {
+    if (!textToRewrite) return;
+    onRewrite({
+      text: textToRewrite,
       tone,
       style,
       length,
@@ -208,7 +214,7 @@ function ChatInput({ value, onChange, onSend, disabled, onTemplateSelect, isRewr
         >
           {templates.length > 0 ? (
             templates.map(template => (
-              <MenuItem key={template.id} onClick={() => handleSelect(template)}>
+              <MenuItem key={template.id} onClick={() => handleSelectTemplate(template)}>
                 {template.title}
               </MenuItem>
             ))
@@ -238,6 +244,13 @@ function ChatInput({ value, onChange, onSend, disabled, onTemplateSelect, isRewr
             endAdornment: isRewriting && <CircularProgress size={20} sx={{ mr: 1 }} />
           }}
         />
+        <Tooltip title="Улучшить сообщение">
+          <span>
+            <IconButton onClick={handleImproveMessage} disabled={disabled || !value.trim()} sx={{ pb: 0.5 }}>
+              <ImproveIcon />
+            </IconButton>
+          </span>
+        </Tooltip>
         <IconButton
           type="submit"
           disabled={disabled || !value.trim()}
@@ -249,10 +262,10 @@ function ChatInput({ value, onChange, onSend, disabled, onTemplateSelect, isRewr
         </IconButton>
       </Box>
       <Dialog open={dialogOpen} onClose={handleDialogClose} fullWidth maxWidth="sm">
-        <DialogTitle>Улучшить текст шаблона</DialogTitle>
+        <DialogTitle>Улучшить текст</DialogTitle>
         <DialogContent>
           <Typography variant="body1" gutterBottom sx={{ mt: 2, p: 2, bgcolor: 'action.hover', borderRadius: 1 }}>
-            {selectedTemplate?.text}
+            {textToRewrite}
           </Typography>
           <FormControl fullWidth margin="normal">
             <InputLabel id="tone-select-label">Тон</InputLabel>
@@ -299,7 +312,7 @@ function ChatInput({ value, onChange, onSend, disabled, onTemplateSelect, isRewr
         </DialogContent>
         <DialogActions>
           <Button onClick={handleDialogClose}>Отмена</Button>
-          <Button onClick={handleRewrite} variant="contained">Улучшить</Button>
+          <Button onClick={handleConfirmRewrite} variant="contained">Улучшить</Button>
         </DialogActions>
       </Dialog>
     </>
@@ -425,7 +438,7 @@ export default function Messenger() {
     };
   }, [selectedChat]);
 
-  const handleTemplateSelect = async (options) => {
+  const handleRewrite = async (options) => {
     const { text, tone, style, length } = options;
     setIsRewriting(true);
     try {
@@ -505,7 +518,7 @@ export default function Messenger() {
               onChange={e => setMessage(e.target.value)}
               onSend={handleSend}
               disabled={sending || isRewriting}
-              onTemplateSelect={handleTemplateSelect}
+              onRewrite={handleRewrite}
               isRewriting={isRewriting}
             />
           </>
