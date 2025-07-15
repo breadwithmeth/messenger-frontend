@@ -6,11 +6,9 @@ import {
   Button,
   Paper,
   InputAdornment,
-  IconButton,
   Snackbar,
   Alert,
 } from '@mui/material';
-import { Save, Visibility, VisibilityOff } from '@mui/icons-material';
 
 const storageKey = 'gemini_api_key';
 
@@ -53,19 +51,19 @@ export default function ApiKeys() {
             InputProps={{
               endAdornment: (
                 <InputAdornment position="end">
-                  <IconButton
-                    aria-label="toggle api key visibility"
+                  <Button
                     onClick={() => setShowApiKey(!showApiKey)}
                     onMouseDown={(e) => e.preventDefault()}
-                    edge="end"
+                    size="small"
+                    variant="text"
                   >
-                    {showApiKey ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
+                    {showApiKey ? 'Скрыть' : 'Показать'}
+                  </Button>
                 </InputAdornment>
               ),
             }}
           />
-          <Button variant="contained" startIcon={<Save />} onClick={handleSave}>
+          <Button variant="contained" onClick={handleSave}>
             Сохранить
           </Button>
         </Box>

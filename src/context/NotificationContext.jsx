@@ -7,7 +7,7 @@ export function useNotification() {
   return useContext(NotificationContext);
 }
 
-export function NotificationProvider({ children }) {
+export function NotificationProvider({ children, anchorOrigin = { vertical: 'bottom', horizontal: 'center' } }) {
   const [notification, setNotification] = useState({
     open: false,
     message: '',
@@ -26,7 +26,7 @@ export function NotificationProvider({ children }) {
     if (reason === 'clickaway') {
       return;
     }
-    setNotification((prev) => ({ ...prev, open: false }));
+    setNotification({ open: false });
   };
 
   return (
@@ -36,7 +36,7 @@ export function NotificationProvider({ children }) {
         open={notification.open}
         autoHideDuration={6000}
         onClose={handleClose}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        anchorOrigin={anchorOrigin}
       >
         <Alert onClose={handleClose} severity={notification.severity} sx={{ width: '100%' }}>
           {notification.message}

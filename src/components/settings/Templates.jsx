@@ -6,7 +6,6 @@ import {
   List,
   ListItem,
   ListItemText,
-  IconButton,
   TextField,
   Dialog,
   DialogActions,
@@ -15,7 +14,6 @@ import {
   Paper,
   Collapse,
 } from '@mui/material';
-import { Edit, Delete, Add, ExpandMore } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
 // Утилиты для работы с localStorage
@@ -24,15 +22,18 @@ const storage = {
   set: (templates) => localStorage.setItem('messageTemplates', JSON.stringify(templates)),
 };
 
-const ExpandMoreIcon = styled((props) => {
+const ExpandButton = styled((props) => {
   const { expand, ...other } = props;
-  return <IconButton {...other} />;
+  return <Button variant="text" size="small" {...other} />;
 })(({ theme, expand }) => ({
   transform: !expand ? 'rotate(0deg)' : 'rotate(180deg)',
   marginLeft: 'auto',
   transition: theme.transitions.create('transform', {
     duration: theme.transitions.duration.shortest,
   }),
+  minWidth: 'auto',
+  padding: '4px',
+  lineHeight: 1,
 }));
 
 export default function Templates() {
@@ -92,7 +93,7 @@ export default function Templates() {
     <Paper sx={{ p: 3, mt: 2 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6">Шаблоны сообщений</Typography>
-        <Button variant="contained" startIcon={<Add />} onClick={() => handleOpen()}>
+        <Button variant="contained" onClick={() => handleOpen()}>
           Добавить шаблон
         </Button>
       </Box>
@@ -106,22 +107,29 @@ export default function Templates() {
             <Paper key={template.id} sx={{ mb: 1.5, p: 1, borderRadius: 2 }} variant="outlined">
               <ListItem
                 secondaryAction={
-                  <>
-                    <IconButton edge="end" aria-label="edit" onClick={() => handleOpen(template)}>
-                      <Edit />
-                    </IconButton>
-                    <IconButton edge="end" aria-label="delete" onClick={() => handleDelete(template.id)} sx={{ ml: 1 }}>
-                      <Delete />
-                    </IconButton>
-                  </>
+                  <Box>
+                    <Button size="small" onClick={() => handleOpen(template)}>
+                      Изм.
+                    </Button>
+                    <Button size="small" color="error" onClick={() => handleDelete(template.id)} sx={{ ml: 1 }}>
+                      Удал.
+                    </Button>
+                  </Box>
                 }
-                onClick={() => handleExpandClick(template.id)}
-                sx={{ cursor: 'pointer' }}
+                disablePadding
               >
-                <ListItemText primary={template.title} />
-                <ExpandMoreIcon expand={expandedId === template.id} aria-expanded={expandedId === template.id}>
-                  <ExpandMore />
-                </ExpandMoreIcon>
+                <ListItemText 
+                  primary={template.title} 
+                  onClick={() => handleExpandClick(template.id)}
+                  sx={{ cursor: 'pointer', pl: 2, pr: 1, my: 1 }}
+                />
+                <ExpandButton 
+                  expand={expandedId === template.id} 
+                  onClick={() => handleExpandClick(template.id)}
+                  aria-expanded={expandedId === template.id}
+                >
+                  ▼
+                </ExpandButton>
               </ListItem>
               <Collapse in={expandedId === template.id} timeout="auto" unmountOnExit>
                 <Box sx={{ p: 2, pt: 0 }}>

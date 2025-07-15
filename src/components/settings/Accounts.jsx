@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { useTheme } from '@mui/material/styles';
 import {
   Box, Typography, List, ListItem, ListItemButton, ListItemText,
   Divider, Button, Dialog, DialogTitle, DialogContent, TextField,
-  DialogActions, IconButton, Tooltip, CircularProgress, Alert,
+  DialogActions, CircularProgress, Alert,
   ListItemIcon,
   Menu,
   MenuItem
 } from '@mui/material';
 import { Add, QrCode, CheckCircle, Error, Refresh, MoreVert } from '@mui/icons-material';
+import { useTheme } from '@mui/material/styles';
 import api from '../../api';
-import { useNotification } from '../../context/NotificationContext';
 import QRCode from 'qrcode';
 
 const STATUS_COLORS = {
@@ -34,11 +33,11 @@ function Accounts() {
   const [error, setError] = useState(null);
   const [open, setOpen] = useState(false);
   const [newAccountName, setNewAccountName] = useState('');
+  const [newAccountJid, setNewAccountJid] = useState(''); // Новое состояние для JID
   const [qrCode, setQrCode] = useState(null);
   const [qrLoading, setQrLoading] = useState(false);
   const [selectedAccountId, setSelectedAccountId] = useState(null);
   const [connectingId, setConnectingId] = useState(null);
-  const { showNotification } = useNotification();
 
   // State for menu
   const [anchorEl, setAnchorEl] = useState(null);
@@ -47,12 +46,12 @@ function Accounts() {
   const fetchAccounts = async () => {
     try {
       setLoading(true);
-      const data = await api.getWhatsAppAccounts();
+      const data = await api.getOrganizationPhones(); // Используем новый эндпоинт
       setAccounts(data);
       setError(null);
     } catch (err) {
       setError('Не удалось загрузить аккаунты.');
-      showNotification('Не удалось загрузить аккаунты', 'error');
+      console.error('Не удалось загрузить аккаунты', err);
     } finally {
       setLoading(false);
     }
@@ -68,20 +67,22 @@ function Accounts() {
   const handleClose = () => {
     setOpen(false);
     setNewAccountName('');
+    setNewAccountJid(''); // Сбрасываем JID
   };
 
   const handleCreate = async () => {
-    if (!newAccountName.trim()) {
-      showNotification('Название аккаунта не может быть пустым', 'warning');
+    if (!newAccountName.trim() || !newAccountJid.trim()) {
+      alert('Название и номер аккаунта не могут быть пустыми');
       return;
     }
     try {
-      await api.createWhatsAppAccount({ name: newAccountName });
+      // Отправляем и имя, и JID
+      await api.createWhatsAppAccount({ displayName: newAccountName, phoneJid: newAccountJid });
       handleClose();
       fetchAccounts();
-      showNotification('Аккаунт успешно создан', 'success');
+      alert('Аккаунт успешно создан');
     } catch (err) {
-      showNotification(err.message || 'Не удалось создать аккаунт', 'error');
+      alert(err.message || 'Не удалось создать аккаунт');
     }
   };
 
@@ -90,25 +91,49 @@ function Accounts() {
     setQrLoading(true);
     setQrCode(null);
     setSelectedAccountId(accountId);
+
     try {
-      const data = await api.connectWhatsAppAccount(accountId);
-      if (data.qr) {
-        // Генерируем QR-код из строки
-        const qrDataURL = await QRCode.toDataURL(data.qr, {
+      // Находим аккаунт в текущем состоянии
+      const account = accounts.find(acc => acc.id === accountId);
+
+      // Проверяем, есть ли уже QR-код
+      if (account && account.qrCode) {
+        const qrDataURL = await QRCode.toDataURL(account.qrCode, {
           width: 256,
           margin: 2,
         });
         setQrCode(qrDataURL);
-        showNotification('Отсканируйте QR-код в приложении WhatsApp', 'info');
+        alert('Отсканируйте QR-код в приложении WhatsApp');
       } else {
-        showNotification('Не удалось получить QR-код, попробуйте еще раз', 'warning');
+        // Если QR-кода нет, запрашиваем его
+        alert('QR-код не найден, запрашиваем новый...');
+        const data = await api.connectWhatsAppAccount(accountId);
+        if (data.qr) {
+          const qrDataURL = await QRCode.toDataURL(data.qr, {
+            width: 256,
+            margin: 2,
+          });
+          setQrCode(qrDataURL);
+          alert('Отсканируйте QR-код в приложении WhatsApp');
+          fetchAccounts(); // Обновляем список аккаунтов, чтобы получить свежий QR
+        } else if (data.message) {
+            alert(data.message);
+            handleQrDialogClose();
+        } else {
+          alert('Не удалось получить QR-код, попробуйте еще раз');
+        }
       }
     } catch (err) {
-      showNotification(err.message || 'Ошибка при подключении', 'error');
+      alert(err.message || 'Ошибка при подключении');
     } finally {
       setQrLoading(false);
       setConnectingId(null);
     }
+  };
+
+  const handleQrDialogClose = () => {
+    setQrCode(null);
+    setSelectedAccountId(null);
   };
 
   const handleMenuOpen = (event, accountId) => {
@@ -121,14 +146,41 @@ function Accounts() {
     setMenuAccountId(null);
   };
 
+  const handleResync = async () => {
+    if (!menuAccountId) return;
+    // Сначала вызываем connect, чтобы сгенерировать новый QR-код на бэкенде
+    try {
+      alert('Запрашиваем новый QR-код...');
+      const connectResponse = await api.connectWhatsAppAccount(menuAccountId);
+      
+      // Если бэкенд вернул сообщение (например, "already connected"), покажем его
+      if (connectResponse && connectResponse.message) {
+          alert(connectResponse.message);
+      }
+
+      // Затем обновляем данные
+      await fetchAccounts();
+
+      // Если в ответе был QR, покажем его
+      if (connectResponse && connectResponse.qr) {
+          handleConnect(menuAccountId);
+      }
+
+    } catch (err) {
+       alert(err.message || 'Ошибка при пересинхронизации');
+    } finally {
+        handleMenuClose();
+    }
+  };
+
   const handleDisconnect = async () => {
     if (!menuAccountId) return;
     try {
       await api.disconnectWhatsAppAccount(menuAccountId);
       fetchAccounts();
-      showNotification('Аккаунт успешно отключен', 'success');
+      alert('Аккаунт успешно отключен');
     } catch (err) {
-      showNotification(err.message || 'Не удалось отключить аккаунт', 'error');
+      alert(err.message || 'Не удалось отключить аккаунт');
     } finally {
       handleMenuClose();
     }
@@ -142,9 +194,9 @@ function Accounts() {
     try {
       await api.deleteWhatsAppAccount(menuAccountId);
       fetchAccounts();
-      showNotification('Аккаунт успешно удален', 'success');
+      alert('Аккаунт успешно удален');
     } catch (err) {
-      showNotification(err.message || 'Не удалось удалить аккаунт', 'error');
+      alert(err.message || 'Не удалось удалить аккаунт');
     } finally {
       handleMenuClose();
     }
@@ -165,7 +217,6 @@ function Accounts() {
         variant="contained"
         color="primary"
         onClick={handleOpen}
-        startIcon={<Add />}
         sx={{ mb: 3 }}
       >
         Добавить аккаунт
@@ -196,13 +247,13 @@ function Accounts() {
               <Typography variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
                 {account.displayName || 'Без имени'}
               </Typography>
-              <IconButton
-                edge="end"
+              <Button
                 aria-label="more"
                 onClick={(e) => handleMenuOpen(e, account.id)}
+                size="small"
               >
-                <MoreVert />
-              </IconButton>
+                Меню
+              </Button>
             </Box>
             <Divider sx={{ width: '100%' }} />
             <Box sx={{ p: 2, width: '100%' }}>
@@ -224,26 +275,25 @@ function Accounts() {
                 <Button
                   onClick={() => handleConnect(account.id)}
                   disabled={connectingId === account.id}
-                  startIcon={connectingId === account.id ? <CircularProgress size={20} /> : <QrCode />}
                 >
-                  {connectingId === account.id ? 'Загрузка QR' : 'Подключить'}
+                  {(connectingId === account.id || qrLoading) ? 'Загрузка QR' : 'Подключить'}
                 </Button>
               )}
-              {selectedAccountId === account.id && qrLoading && <CircularProgress size={24} />}
             </Box>
-            {selectedAccountId === account.id && qrCode && (
-              <Box sx={{ p: 2, borderTop: 1, borderColor: 'divider', textAlign: 'center' }}>
-                <Typography variant="body2" sx={{ mb: 1 }}>Отсканируйте QR-код</Typography>
-                <img src={qrCode} alt="QR Code" style={{ width: '100%', maxWidth: '256px', height: 'auto' }} />
-              </Box>
-            )}
             <Menu
               anchorEl={anchorEl}
               open={Boolean(anchorEl) && menuAccountId === account.id}
               onClose={handleMenuClose}
             >
-              <MenuItem onClick={handleDisconnect}>Отключить</MenuItem>
-              <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>Удалить</MenuItem>
+              <MenuItem onClick={handleResync}>
+                Пересинхронизировать
+              </MenuItem>
+              <MenuItem onClick={handleDisconnect}>
+                Отключить
+              </MenuItem>
+              <MenuItem onClick={handleDelete} sx={{ color: 'error.main' }}>
+                Удалить
+              </MenuItem>
             </Menu>
           </ListItem>
         ))}
@@ -255,69 +305,44 @@ function Accounts() {
           <TextField
             autoFocus
             margin="dense"
+            id="name"
             label="Название аккаунта"
+            type="text"
             fullWidth
-            variant="outlined"
+            variant="standard"
             value={newAccountName}
             onChange={(e) => setNewAccountName(e.target.value)}
           />
+          <TextField
+            margin="dense"
+            id="jid"
+            label="Номер телефона (JID)"
+            placeholder="77051234567"
+            type="text"
+            fullWidth
+            variant="standard"
+            value={newAccountJid}
+            onChange={(e) => setNewAccountJid(e.target.value)}
+          />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} color="primary">
-            Отмена
-          </Button>
-          <Button onClick={handleCreate} color="primary">
+          <Button onClick={handleClose}>Отмена</Button>
+          <Button onClick={handleCreate} variant="contained">
             {loading ? <CircularProgress size={24} color="inherit" /> : 'Создать'}
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog
-        open={qrLoading}
-        onClose={() => setQrLoading(false)}
-        PaperProps={{
-          sx: {
-            borderRadius: 3,
-            padding: 3,
-            bgcolor: 'background.paper',
-            maxWidth: '400px',
-            width: '100%'
-          }
-        }}
-      >
-        <DialogContent sx={{ textAlign: 'center', p: 2 }}>
-          <Typography variant="body1" align="center" sx={{ mb: 2 }}>
-            {qrCode ? 'Отсканируйте QR-код в приложении WhatsApp для подключения' : 'Генерация QR-кода...'}
+      <Dialog open={!!qrCode} onClose={handleQrDialogClose}>
+        <DialogTitle>Сканируйте QR-код</DialogTitle>
+        <DialogContent sx={{ textAlign: 'center' }}>
+          {qrLoading ? <CircularProgress /> : <img src={qrCode} alt="QR Code" />}
+          <Typography variant="body2" sx={{ mt: 2 }}>
+            Откройте WhatsApp на своем телефоне, перейдите в "Связанные устройства" и отсканируйте код.
           </Typography>
-          {qrCode && (
-            <Box sx={{ 
-              p: 4, 
-              border: '1px solid',
-              borderColor: 'rgba(148, 163, 184, 0.2)',
-              borderRadius: 2, 
-              display: 'inline-block',
-              bgcolor: '#FFFFFF',
-              boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)'
-            }}>
-              <img src={`data:image/png;base64,${qrCode}`} alt="QR Code" style={{ width: '100%', height: 'auto' }} />
-            </Box>
-          )}
         </DialogContent>
-        <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
-          <Button 
-            onClick={() => setQrLoading(false)}
-            variant="outlined"
-            sx={{
-              borderColor: 'rgba(148, 163, 184, 0.2)',
-              color: 'text.secondary',
-              '&:hover': {
-                borderColor: 'rgba(148, 163, 184, 0.3)',
-                bgcolor: 'rgba(148, 163, 184, 0.1)',
-              },
-            }}
-          >
-            Закрыть
-          </Button>
+        <DialogActions>
+          <Button onClick={handleQrDialogClose}>Закрыть</Button>
         </DialogActions>
       </Dialog>
     </Box>

@@ -71,7 +71,7 @@ export default function ChatInfoSidebar({ chat, onPhoneUpdate }) {
         bgcolor: 'background.paper',
         display: 'flex',
         flexDirection: 'column',
-        height: '100vh',
+        height: '100%', // Изменено на 100%
         position: 'sticky',
         top: 0,
       }}

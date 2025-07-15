@@ -4,14 +4,12 @@ import {
   Box,
   Paper,
   Typography,
-  IconButton,
+  Button,
   List,
   ListItem,
   ListItemText,
-  Tooltip,
   Divider
 } from "@mui/material";
-import { Settings, LogOut } from "lucide-react";
 
 export default function ChatSidebar({ chats, selectedChat, onSelect }) {
   const navigate = useNavigate();
@@ -52,26 +50,24 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
         <Typography variant="h6" fontWeight="bold">
           Чаты
         </Typography>
-        <Box sx={{ display: 'flex', gap: 1 }}>
-          <Tooltip title="Настройки">
-            <IconButton
+        {/* <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
               onClick={() => navigate("/settings")}
               size="small"
               color="inherit"
+              variant="text"
             >
-              <Settings />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Выйти">
-            <IconButton
+              Настройки
+            </Button>
+            <Button
               onClick={handleLogout}
               size="small"
               color="error"
+              variant="text"
             >
-              <LogOut />
-            </IconButton>
-          </Tooltip>
-        </Box>
+              Выйти
+            </Button>
+        </Box> */}
       </Box>
 
       <List sx={{ flex: 1, overflow: 'auto', p: 1 }}>
@@ -95,23 +91,27 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
               },
             }}
           >
-            <ListItemText
-              primary={
-                <Typography variant="subtitle2" noWrap>
-                  {chat.name || chat.remoteJid || chat.receivingPhoneJid}
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography variant="subtitle2" noWrap>
+                {chat.name || chat.remoteJid || chat.receivingPhoneJid}
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                noWrap
+                sx={{ mb: 0.5 }}
+              >
+                {chat.lastMessage ? chat.lastMessage.content : "Нет сообщений"}
+              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {chat.organizationPhone?.displayName || ''}
                 </Typography>
-              }
-              secondary={
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  noWrap
-                  sx={{ mt: 0.5 }}
-                >
-                  {chat.lastMessage ? chat.lastMessage.content : "Нет сообщений"}
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {chat.lastMessage?.timestamp ? new Date(chat.lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
                 </Typography>
-              }
-            />
+              </Box>
+            </Box>
           </ListItem>
         ))}
       </List>

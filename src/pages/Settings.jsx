@@ -1,10 +1,13 @@
-import React from 'react';
-import { NavLink, Outlet, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
-import { Box, Paper, List, ListItemButton, ListItemIcon, ListItemText, Typography, IconButton, Tooltip, Divider } from '@mui/material';
-import { Users, MessageSquareText, KeyRound, ArrowLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useNavigate, Routes, Route, Navigate } from 'react-router-dom';
+import { Box, Paper, List, ListItemButton, ListItemIcon, ListItemText, Typography, Button, Divider, CircularProgress, Alert } from '@mui/material';
+import { Users, MessageSquareText, KeyRound, ArrowLeft, BrainCircuit, Smartphone } from 'lucide-react';
 import Accounts from '../components/settings/Accounts';
 import Templates from '../components/settings/Templates';
 import ApiKeys from '../components/settings/ApiKeys';
+import AiSettings from '../components/settings/AiSettings';
+import UsersPage from '../components/settings/Users';
+import api from '../api';
 
 const navLinkStyles = {
   '&.active': {
@@ -16,8 +19,56 @@ const navLinkStyles = {
   },
 };
 
-export default function Settings() {
+export default function Settings({ onLogout }) {
   const navigate = useNavigate();
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const user = await api.getCurrentUser();
+        setCurrentUser(user);
+      } catch (err) {
+        setError('Не удалось загрузить информацию о пользователе');
+        console.error('Ошибка при загрузке пользователя:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCurrentUser();
+  }, []);
+
+  if (loading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', p: 2 }}>
+        <Alert severity="error">{error}</Alert>
+      </Box>
+    );
+  }
+
+  if (currentUser?.role !== 'admin') {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', p: 2 }}>
+        <Alert severity="warning">
+          У вас нет прав доступа к настройкам. Только администраторы могут просматривать эту страницу.
+          <Button onClick={() => navigate('/messenger')} sx={{ ml: 2 }}>
+            Вернуться к мессенджеру
+          </Button>
+        </Alert>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ display: 'flex', height: '100vh', bgcolor: 'background.default' }}>
@@ -35,11 +86,9 @@ export default function Settings() {
         }}
       >
         <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Tooltip title="Назад в мессенджер">
-            <IconButton onClick={() => navigate('/messenger')}>
-              <ArrowLeft />
-            </IconButton>
-          </Tooltip>
+            <Button onClick={() => navigate('/messenger')} startIcon={<ArrowLeft />} size="small">
+              Назад
+            </Button>
           <Typography variant="h6" fontWeight="bold">
             Настройки
           </Typography>
@@ -48,9 +97,15 @@ export default function Settings() {
         <List component="nav" sx={{ p: 1 }}>
           <ListItemButton component={NavLink} to="accounts" sx={navLinkStyles}>
             <ListItemIcon>
-              <Users />
+              <Smartphone />
             </ListItemIcon>
             <ListItemText primary="Аккаунты" />
+          </ListItemButton>
+          <ListItemButton component={NavLink} to="users" sx={navLinkStyles}>
+            <ListItemIcon>
+              <Users />
+            </ListItemIcon>
+            <ListItemText primary="Пользователи" />
           </ListItemButton>
           <ListItemButton component={NavLink} to="templates" sx={navLinkStyles}>
             <ListItemIcon>
@@ -64,16 +119,24 @@ export default function Settings() {
             </ListItemIcon>
             <ListItemText primary="API Ключи" />
           </ListItemButton>
+          <ListItemButton component={NavLink} to="ai-settings" sx={navLinkStyles}>
+            <ListItemIcon>
+              <BrainCircuit />
+            </ListItemIcon>
+            <ListItemText primary="Настройки AI" />
+          </ListItemButton>
         </List>
       </Paper>
 
-      {/* Content Area */}
-      <Box component="main" sx={{ flexGrow: 1, p: 3, overflow: 'auto' }}>
+      {/* Main Content */}
+      <Box component="main" sx={{ flexGrow: 1, p: 3, overflowY: 'auto' }}>
         <Routes>
           <Route path="/" element={<Navigate to="accounts" replace />} />
           <Route path="accounts" element={<Accounts />} />
+          <Route path="users" element={<UsersPage />} />
           <Route path="templates" element={<Templates />} />
           <Route path="api-keys" element={<ApiKeys />} />
+          <Route path="ai-settings" element={<AiSettings />} />
         </Routes>
       </Box>
     </Box>
