@@ -556,7 +556,18 @@ export default function Messenger({ onLogout }) {
       }
 
       // 2. Отправка сообщения
-      const sentMessage = await api.sendMessage(selectedChat.id, message);
+      const organizationPhoneId = selectedChat.organizationPhone?.id || selectedChat.organizationPhoneId;
+      const receiverJid = selectedChat.remoteJid;
+      
+      if (!organizationPhoneId || !receiverJid) {
+        throw new Error('Недостаточно данных для отправки сообщения');
+      }
+      
+      const sentMessage = await api.sendTextMessage({ 
+        organizationPhoneId, 
+        receiverJid, 
+        text: message 
+      });
       
       // 3. Обновление UI
       setMessages(prev => [...prev, sentMessage]);
@@ -590,7 +601,7 @@ export default function Messenger({ onLogout }) {
       <ChatSidebar
         chats={chats}
         selectedChat={selectedChat}
-        onSelectChat={handleSelectChat}
+        onSelect={handleSelectChat}
       />
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh' }}>
         <TopBar onLogout={onLogout} />
