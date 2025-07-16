@@ -31,11 +31,18 @@ const server = createServer((req, res) => {
   const stream = createReadStream(filePath)
 
   stream.on('error', () => {
-    res.writeHead(404)
-    res.end('Not found')
+    if (!res.headersSent) {
+      res.writeHead(404)
+      res.end('Not found')
+    }
   })
 
-  res.writeHead(200, { 'Content-Type': contentTypes[ext] || 'text/plain' })
+  stream.on('open', () => {
+    if (!res.headersSent) {
+      res.writeHead(200, { 'Content-Type': contentTypes[ext] || 'text/plain' })
+    }
+  })
+
   stream.pipe(res)
 })
 
