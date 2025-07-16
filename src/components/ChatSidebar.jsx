@@ -71,49 +71,101 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
       </Box>
 
       <List sx={{ flex: 1, overflow: 'auto', p: 1 }}>
-        {chats.map((chat) => (
-          <ListItem
-            key={chat.id}
-            button
-            selected={selectedChat?.id === chat.id}
-            onClick={() => onSelect(chat)}
-            sx={{
-              borderRadius: '8px',
-              mb: 0.5,
-              '&:hover': {
-                backgroundColor: 'rgba(77, 171, 247, 0.1)',
-              },
-              '&.Mui-selected': {
-                backgroundColor: 'rgba(77, 171, 247, 0.2)',
+        {chats.map((chat) => {
+          // Определяем, является ли чат неотвеченным (последнее сообщение не от нас)
+          const isUnread = chat.lastMessage && !chat.lastMessage.fromMe;
+          
+          return (
+            <ListItem
+              key={chat.id}
+              button
+              selected={selectedChat?.id === chat.id}
+              onClick={() => onSelect(chat)}
+              sx={{
+                borderRadius: '8px',
+                mb: 0.5,
+                position: 'relative',
                 '&:hover': {
-                  backgroundColor: 'rgba(77, 171, 247, 0.25)',
+                  backgroundColor: 'rgba(77, 171, 247, 0.1)',
                 },
-              },
-            }}
-          >
-            <Box sx={{ flex: 1, minWidth: 0 }}>
-              <Typography variant="subtitle2" noWrap>
-                {chat.name || chat.remoteJid || chat.receivingPhoneJid}
-              </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                noWrap
-                sx={{ mb: 0.5 }}
-              >
-                {chat.lastMessage ? chat.lastMessage.content : "Нет сообщений"}
-              </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <Typography variant="caption" color="text.secondary" noWrap>
-                  {chat.organizationPhone?.displayName || ''}
+                '&.Mui-selected': {
+                  backgroundColor: 'rgba(77, 171, 247, 0.2)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(77, 171, 247, 0.25)',
+                  },
+                },
+                // Подсвечиваем неотвеченные чаты
+                ...(isUnread && {
+                  backgroundColor: 'rgba(255, 152, 0, 0.1)',
+                  borderLeft: '4px solid',
+                  borderLeftColor: 'warning.main',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 152, 0, 0.15)',
+                  },
+                  '&.Mui-selected': {
+                    backgroundColor: 'rgba(255, 152, 0, 0.2)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 152, 0, 0.25)',
+                    },
+                  },
+                }),
+              }}
+            >
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Typography 
+                    variant="subtitle2" 
+                    noWrap
+                    sx={{ 
+                      fontWeight: isUnread ? 'bold' : 'normal',
+                      flex: 1 
+                    }}
+                  >
+                    {chat.name || chat.remoteJid || chat.receivingPhoneJid}
+                  </Typography>
+                  {isUnread && (
+                    <Box
+                      sx={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        backgroundColor: 'warning.main',
+                        flexShrink: 0,
+                      }}
+                    />
+                  )}
+                </Box>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  noWrap
+                  sx={{ 
+                    mb: 0.5,
+                    fontWeight: isUnread ? 'medium' : 'normal',
+                  }}
+                >
+                  {chat.lastMessage ? chat.lastMessage.content : "Нет сообщений"}
                 </Typography>
-                <Typography variant="caption" color="text.secondary" noWrap>
-                  {chat.lastMessage?.timestamp ? new Date(chat.lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                </Typography>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="caption" color="text.secondary" noWrap>
+                    {chat.organizationPhone?.displayName || ''}
+                  </Typography>
+                  <Typography 
+                    variant="caption" 
+                    color="text.secondary" 
+                    noWrap
+                    sx={{ 
+                      fontWeight: isUnread ? 'bold' : 'normal',
+                      color: isUnread ? 'warning.main' : 'text.secondary'
+                    }}
+                  >
+                    {chat.lastMessage?.timestamp ? new Date(chat.lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                  </Typography>
+                </Box>
               </Box>
-            </Box>
-          </ListItem>
-        ))}
+            </ListItem>
+          );
+        })}
       </List>
     </Paper>
   );

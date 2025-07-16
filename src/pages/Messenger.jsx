@@ -351,6 +351,14 @@ export default function Messenger({ onLogout }) {
       try {
         const data = await api.getChats();
         const sorted = [...data].sort((a, b) => {
+          // Сначала сортируем по статусу ответа (неотвеченные сверху)
+          const aIsUnread = a.lastMessage && !a.lastMessage.fromMe;
+          const bIsUnread = b.lastMessage && !b.lastMessage.fromMe;
+          
+          if (aIsUnread && !bIsUnread) return -1;
+          if (!aIsUnread && bIsUnread) return 1;
+          
+          // Затем по времени последнего сообщения
           const getTime = chat => chat.lastMessage?.timestamp || chat.lastMessageAt || chat.createdAt || 0;
           return new Date(getTime(b)) - new Date(getTime(a));
         });
@@ -510,7 +518,7 @@ export default function Messenger({ onLogout }) {
 
     setIsRewriting(true);
     try {
-      const geminiApiKey = localStorage.getItem('geminiApiKey');
+      const geminiApiKey = localStorage.getItem('gemini_api_key');
       if (!geminiApiKey) {
         alert('API ключ для Gemini не найден. Добавьте его в настройках.');
         setIsRewriting(false);
@@ -541,7 +549,7 @@ export default function Messenger({ onLogout }) {
 
     try {
       // 1. Проверка сообщения перед отправкой
-      const geminiApiKey = localStorage.getItem('geminiApiKey');
+      const geminiApiKey = localStorage.getItem('gemini_api_key');
       if (geminiApiKey) {
         const analysis = await api.analyzeMessageWithGemini(message);
         if (analysis.has_errors || analysis.is_inappropriate) {

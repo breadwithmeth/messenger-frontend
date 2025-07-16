@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, TextField, Button } from '@mui/material';
-import { useNotification } from '../../context/NotificationContext';
 
 export default function AiSettings() {
   const [context, setContext] = useState('');
-  const { showNotification } = useNotification();
 
   useEffect(() => {
     const savedContext = localStorage.getItem('aiContext');
@@ -15,7 +13,7 @@ export default function AiSettings() {
 
   const handleSave = () => {
     localStorage.setItem('aiContext', context);
-    showNotification('Контекст AI сохранен!', 'success');
+    alert('Контекст AI сохранен!');
   };
 
   return (

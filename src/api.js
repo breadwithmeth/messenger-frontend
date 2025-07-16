@@ -161,20 +161,29 @@ const suggestRepliesWithGemini = async (chatHistory, userContext) => {
   try {
     const response = await axios.post(API_URL, {
       contents: [{ parts: [{ text: prompt }] }]
-    }, {
-      responseType: 'text'
     });
 
-    const rawText = response.data;
+    // Обрабатываем JSON ответ от Gemini API
+    const geminiResponse = response.data;
+    console.log('Gemini API response:', geminiResponse); // Для отладки
+    
+    if (!geminiResponse.candidates || !geminiResponse.candidates[0]) {
+      throw new Error('Некорректный ответ от Gemini API');
+    }
+
+    const textContent = geminiResponse.candidates[0].content.parts[0].text;
+    console.log('Text content from Gemini:', textContent); // Для отладки
+    
     // Улучшенный поиск JSON, который может быть обернут в markdown или нет
-    const jsonMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)\s*```|(\[[\s\S]*\])/);
+    const jsonMatch = textContent.match(/```(?:json)?\s*([\s\S]*?)\s*```|(\[[\s\S]*\])/);
     
     if (!jsonMatch) {
-      console.error("Не удалось извлечь JSON из ответа Gemini:", rawText);
+      console.error("Не удалось извлечь JSON из ответа Gemini:", textContent);
       throw new Error('Не удалось извлечь JSON из ответа Gemini.');
     }
     
     let jsonString = jsonMatch[1] || jsonMatch[2];
+    console.log('Extracted JSON string:', jsonString); // Для отладки
 
     try {
       // Попытка исправить распространенные ошибки формата
@@ -189,7 +198,9 @@ const suggestRepliesWithGemini = async (chatHistory, userContext) => {
         .replace(/\\f/g, "\\f")
         .replace(/[\u0000-\u0019]+/g,""); 
 
-      return JSON.parse(cleanedJsonString);
+      const parsedResult = JSON.parse(cleanedJsonString);
+      console.log('Parsed result:', parsedResult); // Для отладки
+      return parsedResult;
     } catch (e) {
       console.error("Ошибка парсинга JSON строки:", jsonString, "Ошибка:", e);
       throw new Error('Не удалось обработать ответ от Gemini.');

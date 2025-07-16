@@ -21,6 +21,14 @@ function Dashboard() {
         .then(data => {
           if (!isMounted) return;
           const sorted = [...data].sort((a, b) => {
+            // Сначала сортируем по статусу ответа (неотвеченные сверху)
+            const aIsUnread = a.lastMessage && !a.lastMessage.fromMe;
+            const bIsUnread = b.lastMessage && !b.lastMessage.fromMe;
+            
+            if (aIsUnread && !bIsUnread) return -1;
+            if (!aIsUnread && bIsUnread) return 1;
+            
+            // Затем по времени последнего сообщения
             const getTime = chat =>
               chat.lastMessage?.timestamp || chat.lastMessageAt || chat.createdAt || 0;
             return new Date(getTime(b)) - new Date(getTime(a));
@@ -111,29 +119,84 @@ function Dashboard() {
           <div style={{ padding: 16, color: 'red', textAlign: 'center' }}>{error}</div>
         ) : (
           <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-            {chats.map(chat => (
-              <li
-                key={chat.id}
-                onClick={() => handleChatClick(chat)}
-                style={{
-                  padding: '12px 16px',
-                  cursor: 'pointer',
-                  background: selectedChat?.id === chat.id ? '#e0e0e0' : 'transparent',
-                  borderBottom: '1px solid #ddd',
-                  userSelect: 'none',
-                  transition: 'background-color 0.2s'
-                }}
-                onMouseEnter={e => { if (selectedChat?.id !== chat.id) e.currentTarget.style.backgroundColor = '#f5f5f5' }}
-                onMouseLeave={e => { if (selectedChat?.id !== chat.id) e.currentTarget.style.backgroundColor = 'transparent' }}
-              >
-                <div style={{ fontWeight: 600, marginBottom: 4, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {chat.name || chat.remoteJid || chat.receivingPhoneJid}
-                </div>
-                <div style={{ color: '#555', fontSize: 14, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {chat.lastMessage?.content || 'Нет сообщений'}
-                </div>
-              </li>
-            ))}
+            {chats.map(chat => {
+              // Определяем, является ли чат неотвеченным (последнее сообщение не от нас)
+              const isUnread = chat.lastMessage && !chat.lastMessage.fromMe;
+              
+              return (
+                <li
+                  key={chat.id}
+                  onClick={() => handleChatClick(chat)}
+                  style={{
+                    padding: '12px 16px',
+                    cursor: 'pointer',
+                    background: selectedChat?.id === chat.id ? '#e0e0e0' : (isUnread ? '#fff8e1' : 'transparent'),
+                    borderBottom: '1px solid #ddd',
+                    borderLeft: isUnread ? '4px solid #ff9800' : 'none',
+                    userSelect: 'none',
+                    transition: 'background-color 0.2s',
+                    position: 'relative'
+                  }}
+                  onMouseEnter={e => { 
+                    if (selectedChat?.id !== chat.id) {
+                      e.currentTarget.style.backgroundColor = isUnread ? '#fff3c4' : '#f5f5f5';
+                    }
+                  }}
+                  onMouseLeave={e => { 
+                    if (selectedChat?.id !== chat.id) {
+                      e.currentTarget.style.backgroundColor = isUnread ? '#fff8e1' : 'transparent';
+                    }
+                  }}
+                >
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    marginBottom: 4 
+                  }}>
+                    <div style={{ 
+                      fontWeight: isUnread ? 'bold' : 600, 
+                      whiteSpace: 'nowrap', 
+                      overflow: 'hidden', 
+                      textOverflow: 'ellipsis',
+                      flex: 1,
+                      marginRight: 8
+                    }}>
+                      {chat.name || chat.remoteJid || chat.receivingPhoneJid}
+                    </div>
+                    {isUnread && (
+                      <div style={{
+                        width: 8,
+                        height: 8,
+                        borderRadius: '50%',
+                        backgroundColor: '#ff9800',
+                        flexShrink: 0,
+                      }} />
+                    )}
+                  </div>
+                  <div style={{ 
+                    color: '#555', 
+                    fontSize: 14, 
+                    whiteSpace: 'nowrap', 
+                    overflow: 'hidden', 
+                    textOverflow: 'ellipsis',
+                    fontWeight: isUnread ? 500 : 'normal'
+                  }}>
+                    {chat.lastMessage?.content || 'Нет сообщений'}
+                  </div>
+                  {chat.lastMessage?.timestamp && (
+                    <div style={{
+                      color: isUnread ? '#ff9800' : '#888',
+                      fontSize: 12,
+                      marginTop: 2,
+                      fontWeight: isUnread ? 'bold' : 'normal'
+                    }}>
+                      {new Date(chat.lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </aside>
