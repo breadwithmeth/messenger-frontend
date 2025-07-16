@@ -20,6 +20,16 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
     window.location.reload();
   };
 
+  // Сортируем чаты по времени от новых к старым
+  const sortedChats = [...chats].sort((a, b) => {
+    // Сортируем по времени последнего сообщения (от новых к старым)
+    const getTime = chat => {
+      const timestamp = chat.lastMessage?.timestamp || chat.lastMessageAt || chat.createdAt;
+      return timestamp ? new Date(timestamp).getTime() : 0;
+    };
+    return getTime(b) - getTime(a);
+  });
+
   return (
     <Paper
       elevation={0}
@@ -72,7 +82,7 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
       </Box>
 
       <List sx={{ flex: 1, overflow: 'auto', p: 1 }}>
-        {chats.map((chat) => {
+        {sortedChats.map((chat) => {
           // Определяем, является ли чат неотвеченным (последнее сообщение не от нас)
           const isUnread = chat.lastMessage && !chat.lastMessage.fromMe;
           

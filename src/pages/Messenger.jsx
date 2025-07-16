@@ -405,6 +405,7 @@ export default function Messenger({ onLogout }) {
     const fetchChats = async () => {
       try {
         const data = await api.getChats();
+        // Сортируем чаты по времени от новых к старым
         const sorted = [...data].sort((a, b) => {
           // Сначала сортируем по статусу ответа (неотвеченные сверху)
           const aIsUnread = a.lastMessage && !a.lastMessage.fromMe;
@@ -413,9 +414,12 @@ export default function Messenger({ onLogout }) {
           if (aIsUnread && !bIsUnread) return -1;
           if (!aIsUnread && bIsUnread) return 1;
           
-          // Затем по времени последнего сообщения
-          const getTime = chat => chat.lastMessage?.timestamp || chat.lastMessageAt || chat.createdAt || 0;
-          return new Date(getTime(b)) - new Date(getTime(a));
+          // Затем по времени последнего сообщения (от новых к старым)
+          const getTime = chat => {
+            const timestamp = chat.lastMessage?.timestamp || chat.lastMessageAt || chat.createdAt;
+            return timestamp ? new Date(timestamp).getTime() : 0;
+          };
+          return getTime(b) - getTime(a);
         });
         if (isMounted) setChats(sorted);
       } catch {
@@ -425,7 +429,8 @@ export default function Messenger({ onLogout }) {
       }
     };
     fetchChats();
-    const interval = setInterval(fetchChats, 5000);
+    // Обновляем чаты каждые 2 секунды
+    const interval = setInterval(fetchChats, 2000);
     return () => { isMounted = false; clearInterval(interval); };
   }, []);
 
@@ -466,10 +471,10 @@ export default function Messenger({ onLogout }) {
     // Первоначальная загрузка с индикатором
     fetchMessages(true);
     
-    // Периодическое обновление без индикатора загрузки
+    // Периодическое обновление без индикатора загрузки (каждые 2 секунды)
     const interval = setInterval(() => {
       fetchMessages(false);
-    }, 5000);
+    }, 2000);
     
     return () => { 
       isMounted = false; 

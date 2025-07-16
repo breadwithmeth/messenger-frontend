@@ -20,6 +20,7 @@ function Dashboard() {
       api.getChats()
         .then(data => {
           if (!isMounted) return;
+          // Сортируем чаты по времени от новых к старым
           const sorted = [...data].sort((a, b) => {
             // Сначала сортируем по статусу ответа (неотвеченные сверху)
             const aIsUnread = a.lastMessage && !a.lastMessage.fromMe;
@@ -28,10 +29,12 @@ function Dashboard() {
             if (aIsUnread && !bIsUnread) return -1;
             if (!aIsUnread && bIsUnread) return 1;
             
-            // Затем по времени последнего сообщения
-            const getTime = chat =>
-              chat.lastMessage?.timestamp || chat.lastMessageAt || chat.createdAt || 0;
-            return new Date(getTime(b)) - new Date(getTime(a));
+            // Затем по времени последнего сообщения (от новых к старым)
+            const getTime = chat => {
+              const timestamp = chat.lastMessage?.timestamp || chat.lastMessageAt || chat.createdAt;
+              return timestamp ? new Date(timestamp).getTime() : 0;
+            };
+            return getTime(b) - getTime(a);
           });
           setChats(sorted);
         })
@@ -39,7 +42,8 @@ function Dashboard() {
         .finally(() => isMounted && setLoading(false));
     };
     fetchChats();
-    const intervalId = setInterval(fetchChats, 5000);
+    // Обновляем чаты каждые 2 секунды
+    const intervalId = setInterval(fetchChats, 2000);
     return () => {
       isMounted = false;
       clearInterval(intervalId);
@@ -98,7 +102,8 @@ function Dashboard() {
 
   useEffect(() => {
     if (!selectedChat) return;
-    const interval = setInterval(() => fetchMessages(selectedChat.id), 5000);
+    // Обновляем сообщения каждые 2 секунды
+    const interval = setInterval(() => fetchMessages(selectedChat.id), 2000);
     return () => clearInterval(interval);
   }, [selectedChat]);
 
