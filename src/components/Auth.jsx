@@ -44,15 +44,18 @@ function Auth({ onLoginSuccess }) {
       }}
     >
       <Paper
-        elevation={3}
+        elevation={0}
         sx={{
           p: 4,
           width: '100%',
           maxWidth: 400,
-          borderRadius: 2
+          borderRadius: '20px',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
+          border: '1px solid',
+          borderColor: 'divider'
         }}
       >
-        <Typography variant="h5" component="h1" gutterBottom align="center" fontWeight="bold">
+        <Typography variant="h5" component="h1" gutterBottom align="center" fontWeight="600" color="text.primary">
           Вход в систему
         </Typography>
         
@@ -93,7 +96,17 @@ function Auth({ onLoginSuccess }) {
             variant="contained"
             size="large"
             disabled={loading}
-            sx={{ mt: 3 }}
+            sx={{ 
+              mt: 3,
+              borderRadius: '20px',
+              textTransform: 'none',
+              fontSize: '1rem',
+              fontWeight: 600,
+              boxShadow: 'none',
+              '&:hover': {
+                boxShadow: '0 4px 16px rgba(0, 122, 255, 0.3)',
+              }
+            }}
           >
             {loading ? (
               <CircularProgress size={24} color="inherit" />

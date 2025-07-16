@@ -51,14 +51,44 @@ export default function ChatMessages({ messages, userId }) {
           >
             {date}
           </Typography>
-          {grouped[date].map((msg) => (
-            <ChatBubble
-              key={msg.id}
-              message={msg}
-              isMe={msg.fromMe || msg.senderId === userId}
-              showTime={true}
-            />
-          ))}
+          {grouped[date].map((msg, index) => {
+            const prevMsg = index > 0 ? grouped[date][index - 1] : null;
+            const nextMsg = index < grouped[date].length - 1 ? grouped[date][index + 1] : null;
+            
+            // Определяем, нужно ли показывать информацию об отправителе
+            const showSenderInfo = msg.fromMe && msg.senderUser && (
+              !prevMsg || 
+              !prevMsg.fromMe || 
+              prevMsg.senderUserId !== msg.senderUserId ||
+              (new Date(msg.timestamp) - new Date(prevMsg.timestamp)) > 5 * 60 * 1000 // 5 минут
+            );
+            
+            return (
+              <React.Fragment key={msg.id}>
+                {/* Показываем имя отправителя для групп наших сообщений */}
+                {showSenderInfo && (
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: 'text.secondary',
+                      alignSelf: 'flex-end',
+                      mr: 1,
+                      mb: 0.5,
+                      fontSize: '0.75rem',
+                      fontWeight: 500
+                    }}
+                  >
+                    {msg.senderUser.name || msg.senderUser.email.split('@')[0]}
+                  </Typography>
+                )}
+                <ChatBubble
+                  message={msg}
+                  isMe={msg.fromMe || msg.senderId === userId}
+                  showTime={true}
+                />
+              </React.Fragment>
+            );
+          })}
         </React.Fragment>
       ))}
       <div ref={endRef} />

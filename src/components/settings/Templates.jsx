@@ -93,7 +93,18 @@ export default function Templates() {
     <Paper sx={{ p: 3, mt: 2 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
         <Typography variant="h6">Шаблоны сообщений</Typography>
-        <Button variant="contained" onClick={() => handleOpen()}>
+        <Button 
+          variant="contained" 
+          onClick={() => handleOpen()}
+          sx={{
+            borderRadius: '20px',
+            textTransform: 'none',
+            boxShadow: 'none',
+            '&:hover': {
+              boxShadow: '0 2px 8px rgba(0, 122, 255, 0.2)',
+            }
+          }}
+        >
           Добавить шаблон
         </Button>
       </Box>
@@ -104,14 +115,36 @@ export default function Templates() {
       {templates.length > 0 ? (
         <List>
           {templates.map((template) => (
-            <Paper key={template.id} sx={{ mb: 1.5, p: 1, borderRadius: 2 }} variant="outlined">
+            <Paper key={template.id} sx={{ mb: 1.5, p: 1, borderRadius: '16px', border: '1px solid', borderColor: 'divider' }} variant="outlined">
               <ListItem
                 secondaryAction={
                   <Box>
-                    <Button size="small" onClick={() => handleOpen(template)}>
+                    <Button 
+                      size="small" 
+                      onClick={() => handleOpen(template)}
+                      sx={{
+                        borderRadius: '12px',
+                        textTransform: 'none',
+                        '&:hover': {
+                          backgroundColor: 'rgba(0, 122, 255, 0.04)',
+                        }
+                      }}
+                    >
                       Изм.
                     </Button>
-                    <Button size="small" color="error" onClick={() => handleDelete(template.id)} sx={{ ml: 1 }}>
+                    <Button 
+                      size="small" 
+                      color="error" 
+                      onClick={() => handleDelete(template.id)} 
+                      sx={{ 
+                        ml: 1,
+                        borderRadius: '12px',
+                        textTransform: 'none',
+                        '&:hover': {
+                          backgroundColor: 'rgba(244, 67, 54, 0.04)',
+                        }
+                      }}
+                    >
                       Удал.
                     </Button>
                   </Box>
@@ -147,8 +180,8 @@ export default function Templates() {
         </Typography>
       )}
 
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
-        <DialogTitle>{currentTemplate ? 'Редактировать шаблон' : 'Новый шаблон'}</DialogTitle>
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: '20px' } }}>
+        <DialogTitle sx={{ fontWeight: 600 }}>{currentTemplate ? 'Редактировать шаблон' : 'Новый шаблон'}</DialogTitle>
         <form onSubmit={handleSave}>
           <DialogContent>
             <TextField
@@ -179,8 +212,29 @@ export default function Templates() {
             />
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleClose}>Отмена</Button>
-            <Button type="submit">Сохранить</Button>
+            <Button 
+              onClick={handleClose}
+              sx={{
+                borderRadius: '12px',
+                textTransform: 'none',
+              }}
+            >
+              Отмена
+            </Button>
+            <Button 
+              type="submit"
+              variant="contained"
+              sx={{
+                borderRadius: '12px',
+                textTransform: 'none',
+                boxShadow: 'none',
+                '&:hover': {
+                  boxShadow: '0 2px 8px rgba(0, 122, 255, 0.2)',
+                }
+              }}
+            >
+              Сохранить
+            </Button>
           </DialogActions>
         </form>
       </Dialog>

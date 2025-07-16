@@ -121,6 +121,9 @@ export default function ChatBubble({ message, isMe, showTime }) {
         border: theme => isMe ? 'none' : `1px solid ${theme.palette.divider}`
       }}
     >
+      {/* Больше не показываем имя отправителя внутри bubble, 
+          так как это делается в ChatMessages */}
+      
       {message.quotedContent && (
         <Box
           sx={{

@@ -34,17 +34,26 @@ export default function TopBar({ onLogout }) {
         justifyContent: 'flex-end',
         alignItems: 'center',
         p: 1,
-        borderBottom: '2px solid',
+        borderBottom: '1px solid',
         borderColor: 'divider',
         bgcolor: 'background.paper',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
       }}
     >
       {currentUser?.role === 'admin' && (
         <Button 
-          variant="outlined" 
-          color="secondary" 
+          variant="text" 
+          color="primary" 
           onClick={() => navigate('/settings')}
-          sx={{ mr: 1 }}
+          sx={{ 
+            mr: 1,
+            borderRadius: '20px',
+            textTransform: 'none',
+            fontWeight: 500,
+            '&:hover': {
+              backgroundColor: 'rgba(0, 122, 255, 0.04)',
+            }
+          }}
         >
           Настройки
         </Button>
@@ -53,6 +62,16 @@ export default function TopBar({ onLogout }) {
         variant="outlined" 
         color="error" 
         onClick={handleLogoutClick}
+        sx={{
+          borderRadius: '20px',
+          textTransform: 'none',
+          fontWeight: 500,
+          borderWidth: '1px',
+          '&:hover': {
+            backgroundColor: 'rgba(244, 67, 54, 0.04)',
+            borderWidth: '1px',
+          }
+        }}
       >
         Выйти
       </Button>

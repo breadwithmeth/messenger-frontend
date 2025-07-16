@@ -10,12 +10,18 @@ import UsersPage from '../components/settings/Users';
 import api from '../api';
 
 const navLinkStyles = {
+  borderRadius: '12px',
+  mb: 0.5,
+  mx: 1,
   '&.active': {
-    backgroundColor: 'action.selected',
+    backgroundColor: 'rgba(0, 122, 255, 0.08)',
     '& .MuiListItemIcon-root, & .MuiListItemText-primary': {
       color: 'primary.main',
       fontWeight: '600',
     },
+  },
+  '&:hover': {
+    backgroundColor: 'rgba(0, 122, 255, 0.04)',
   },
 };
 
@@ -86,10 +92,21 @@ export default function Settings({ onLogout }) {
         }}
       >
         <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-            <Button onClick={() => navigate('/messenger')} startIcon={<ArrowLeft />} size="small">
+            <Button 
+              onClick={() => navigate('/messenger')} 
+              startIcon={<ArrowLeft />} 
+              size="small"
+              sx={{
+                borderRadius: '20px',
+                textTransform: 'none',
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 122, 255, 0.04)',
+                }
+              }}
+            >
               Назад
             </Button>
-          <Typography variant="h6" fontWeight="bold">
+          <Typography variant="h6" fontWeight="600" color="text.primary">
             Настройки
           </Typography>
         </Box>

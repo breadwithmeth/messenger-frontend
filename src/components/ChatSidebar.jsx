@@ -10,6 +10,7 @@ import {
   ListItemText,
   Divider
 } from "@mui/material";
+import UserAvatar from "./UserAvatar";
 
 export default function ChatSidebar({ chats, selectedChat, onSelect }) {
   const navigate = useNavigate();
@@ -86,26 +87,29 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
                 mb: 0.5,
                 position: 'relative',
                 '&:hover': {
-                  backgroundColor: 'rgba(77, 171, 247, 0.1)',
+                  backgroundColor: 'rgba(0, 122, 255, 0.04)',
+                  transform: 'translateX(2px)',
                 },
                 '&.Mui-selected': {
-                  backgroundColor: 'rgba(77, 171, 247, 0.2)',
+                  backgroundColor: 'rgba(0, 122, 255, 0.08)',
+                  borderLeft: '2px solid',
+                  borderLeftColor: 'primary.main',
                   '&:hover': {
-                    backgroundColor: 'rgba(77, 171, 247, 0.25)',
+                    backgroundColor: 'rgba(0, 122, 255, 0.12)',
                   },
                 },
-                // Подсвечиваем неотвеченные чаты
+                // Подсвечиваем неотвеченные чаты минималистично
                 ...(isUnread && {
-                  backgroundColor: 'rgba(255, 152, 0, 0.1)',
-                  borderLeft: '4px solid',
+                  backgroundColor: 'rgba(255, 152, 0, 0.04)',
+                  borderLeft: '2px solid',
                   borderLeftColor: 'warning.main',
                   '&:hover': {
-                    backgroundColor: 'rgba(255, 152, 0, 0.15)',
+                    backgroundColor: 'rgba(255, 152, 0, 0.08)',
                   },
                   '&.Mui-selected': {
-                    backgroundColor: 'rgba(255, 152, 0, 0.2)',
+                    backgroundColor: 'rgba(255, 152, 0, 0.12)',
                     '&:hover': {
-                      backgroundColor: 'rgba(255, 152, 0, 0.25)',
+                      backgroundColor: 'rgba(255, 152, 0, 0.16)',
                     },
                   },
                 }),
@@ -126,8 +130,8 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
                   {isUnread && (
                     <Box
                       sx={{
-                        width: 8,
-                        height: 8,
+                        width: 6,
+                        height: 6,
                         borderRadius: '50%',
                         backgroundColor: 'warning.main',
                         flexShrink: 0,
@@ -144,23 +148,43 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
                     fontWeight: isUnread ? 'medium' : 'normal',
                   }}
                 >
+                  {/* Показываем префикс отправителя */}
+                  {chat.lastMessage && chat.lastMessage.fromMe && chat.lastMessage.senderUser && (
+                    <Typography 
+                      component="span" 
+                      variant="caption" 
+                      sx={{ 
+                        opacity: 0.7,
+                        fontWeight: 500,
+                        mr: 0.5 
+                      }}
+                    >
+                      {chat.lastMessage.senderUser.name || chat.lastMessage.senderUser.email.split('@')[0]}:
+                    </Typography>
+                  )}
                   {chat.lastMessage ? chat.lastMessage.content : "Нет сообщений"}
                 </Typography>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="caption" color="text.secondary" noWrap>
                     {chat.organizationPhone?.displayName || ''}
                   </Typography>
-                  <Typography 
-                    variant="caption" 
-                    color="text.secondary" 
-                    noWrap
-                    sx={{ 
-                      fontWeight: isUnread ? 'bold' : 'normal',
-                      color: isUnread ? 'warning.main' : 'text.secondary'
-                    }}
-                  >
-                    {chat.lastMessage?.timestamp ? new Date(chat.lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    {/* Показываем аватар отправителя последнего сообщения */}
+                    {chat.lastMessage?.fromMe && chat.lastMessage?.senderUser && (
+                      <UserAvatar user={chat.lastMessage.senderUser} size={16} />
+                    )}
+                    <Typography 
+                      variant="caption" 
+                      color="text.secondary" 
+                      noWrap
+                      sx={{ 
+                        fontWeight: isUnread ? 'bold' : 'normal',
+                        color: isUnread ? 'warning.main' : 'text.secondary'
+                      }}
+                    >
+                      {chat.lastMessage?.timestamp ? new Date(chat.lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                    </Typography>
+                  </Box>
                 </Box>
               </Box>
             </ListItem>

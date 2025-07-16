@@ -153,6 +153,15 @@ export default function ChatInfoSidebar({ chat, onPhoneUpdate }) {
                     }
                   />
                 </ListItem>
+                {/* Показываем информацию о последнем отправителе */}
+                {chat?.lastMessage?.fromMe && chat?.lastMessage?.senderUser && (
+                  <ListItem sx={{ px: 0 }}>
+                    <ListItemText
+                      primary="Последний отправитель"
+                      secondary={chat.lastMessage.senderUser.name || chat.lastMessage.senderUser.email}
+                    />
+                  </ListItem>
+                )}
               </List>
             </Box>
           </>

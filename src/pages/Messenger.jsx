@@ -21,6 +21,7 @@ import api from "../api";
 import ChatSidebar from "../components/ChatSidebar";
 import ChatInfoSidebar from "../components/ChatInfoSidebar";
 import ChatBubble from "../components/ChatBubble"; // Импортируем правильный компонент
+import MessageGroupHeader from "../components/MessageGroupHeader";
 import TopBar from "../components/TopBar";
 
 function ChatMessages({ messages, userId, loading }) {
@@ -117,13 +118,36 @@ function ChatMessages({ messages, userId, loading }) {
           >
             {date}
           </Typography>
-          {grouped[date].map(msg => {
+          {grouped[date].map((msg, index) => {
             // Если в сообщении нет quotedContent, но есть quotedMessageId, ищем его вручную
             const finalQuotedContent = msg.quotedContent || findQuotedMessageContent(msg.quotedMessageId);
             const messageWithQuote = { ...msg, quotedContent: finalQuotedContent };
 
-            // Убедимся, что мы передаем все нужные пропсы в импортированный ChatBubble
-            return <ChatBubble key={msg.id} message={messageWithQuote} isMe={msg.fromMe || msg.senderId === userId} />;
+            const prevMsg = index > 0 ? grouped[date][index - 1] : null;
+            
+            // Определяем, нужно ли показывать информацию об отправителе
+            const showSenderInfo = msg.fromMe && msg.senderUser && (
+              !prevMsg || 
+              !prevMsg.fromMe || 
+              prevMsg.senderUserId !== msg.senderUserId ||
+              (new Date(msg.timestamp) - new Date(prevMsg.timestamp)) > 5 * 60 * 1000 // 5 минут
+            );
+
+            return (
+              <React.Fragment key={msg.id}>
+                {/* Показываем заголовок группы сообщений */}
+                {showSenderInfo && (
+                  <MessageGroupHeader 
+                    senderUser={msg.senderUser} 
+                    timestamp={msg.timestamp}
+                  />
+                )}
+                <ChatBubble 
+                  message={messageWithQuote} 
+                  isMe={msg.fromMe || msg.senderId === userId} 
+                />
+              </React.Fragment>
+            );
           })}
         </React.Fragment>
       ))}
@@ -251,15 +275,39 @@ function ChatInput({ value, onChange, onSend, disabled, onRewrite, isRewriting }
             mr: 1,
             ml: 1,
             '& .MuiOutlinedInput-root': {
-              borderRadius: '0px',
-              borderWidth: '2px',
+              borderRadius: '24px',
+              backgroundColor: '#F8F8F8',
+              border: 'none',
+              '& fieldset': {
+                border: 'none',
+              },
+              '&:hover': {
+                backgroundColor: '#F2F2F2',
+              },
+              '&.Mui-focused': {
+                backgroundColor: '#FFFFFF',
+                boxShadow: '0 0 0 1px rgba(0, 122, 255, 0.3)',
+              },
             }
           }}
           InputProps={{
             endAdornment: isRewriting && <CircularProgress size={20} sx={{ mr: 1 }} color="secondary" />
           }}
         />
-        <Button onClick={handleImproveMessage} disabled={disabled || !value.trim()} variant="text" color="primary" sx={{ p: '8px 16px', minWidth: 'auto' }}>
+        <Button 
+          onClick={handleImproveMessage} 
+          disabled={disabled || !value.trim()} 
+          variant="text" 
+          color="primary" 
+          sx={{ 
+            p: '8px 16px', 
+            minWidth: 'auto',
+            borderRadius: '20px',
+            '&:hover': {
+              backgroundColor: 'rgba(0, 122, 255, 0.04)',
+            }
+          }}
+        >
           Улучшить
         </Button>
         <Button
@@ -267,7 +315,14 @@ function ChatInput({ value, onChange, onSend, disabled, onRewrite, isRewriting }
           disabled={disabled || !value.trim()}
           color="primary"
           variant="contained"
-          sx={{ p: '8px 16px', borderRadius: '20px' }}
+          sx={{ 
+            p: '8px 16px', 
+            borderRadius: '20px',
+            boxShadow: 'none',
+            '&:hover': {
+              boxShadow: '0 2px 8px rgba(0, 122, 255, 0.2)',
+            }
+          }}
         >
           Отправить
         </Button>
@@ -625,9 +680,34 @@ export default function Messenger({ onLogout }) {
                   </Box>
                 )}
                 {suggestedReplies.length > 0 && (
-                  <Box sx={{ p: 1, display: 'flex', gap: 1, flexWrap: 'wrap', justifyContent: 'center', borderTop: '1px solid', borderColor: 'divider' }}>
+                  <Box sx={{ 
+                    p: 1.5, 
+                    display: 'flex', 
+                    gap: 1, 
+                    flexWrap: 'wrap', 
+                    justifyContent: 'center', 
+                    borderTop: '1px solid', 
+                    borderColor: 'divider',
+                    backgroundColor: '#FAFAFA'
+                  }}>
                     {suggestedReplies.map((reply, index) => (
-                      <Button key={index} variant="outlined" size="small" onClick={() => setMessage(reply)}>
+                      <Button 
+                        key={index} 
+                        variant="outlined" 
+                        size="small" 
+                        onClick={() => setMessage(reply)}
+                        sx={{
+                          borderRadius: '16px',
+                          textTransform: 'none',
+                          fontSize: '0.875rem',
+                          borderColor: 'rgba(0, 122, 255, 0.3)',
+                          color: 'primary.main',
+                          '&:hover': {
+                            backgroundColor: 'rgba(0, 122, 255, 0.04)',
+                            borderColor: 'primary.main',
+                          }
+                        }}
+                      >
                         {reply}
                       </Button>
                     ))}

@@ -174,36 +174,67 @@ const suggestRepliesWithGemini = async (chatHistory, userContext) => {
     const textContent = geminiResponse.candidates[0].content.parts[0].text;
     console.log('Text content from Gemini:', textContent); // Для отладки
     
-    // Улучшенный поиск JSON, который может быть обернут в markdown или нет
-    const jsonMatch = textContent.match(/```(?:json)?\s*([\s\S]*?)\s*```|(\[[\s\S]*\])/);
+    // Улучшенный поиск JSON в ответе Gemini
+    let jsonString = textContent.trim();
     
-    if (!jsonMatch) {
-      console.error("Не удалось извлечь JSON из ответа Gemini:", textContent);
-      throw new Error('Не удалось извлечь JSON из ответа Gemini.');
+    // Удаляем markdown блоки если они есть
+    const markdownMatch = textContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+    if (markdownMatch) {
+      jsonString = markdownMatch[1].trim();
+    } else {
+      // Ищем JSON массив напрямую
+      const jsonArrayMatch = textContent.match(/\[[\s\S]*?\]/);
+      if (jsonArrayMatch) {
+        jsonString = jsonArrayMatch[0];
+      } else {
+        // Если JSON не найден, пытаемся извлечь строки из текста
+        const lines = textContent.split('\n').filter(line => line.trim());
+        const replies = [];
+        
+        for (const line of lines) {
+          // Ищем строки в кавычках
+          const quotedMatch = line.match(/"([^"]+)"/);
+          if (quotedMatch && quotedMatch[1].length > 0) {
+            replies.push(quotedMatch[1]);
+          } else if (line.includes('.') && line.length > 5 && line.length < 100) {
+            // Если строка похожа на ответ (содержит точку, не слишком короткая/длинная)
+            const cleanLine = line.replace(/^\d+\.\s*/, '').replace(/^[-*]\s*/, '').trim();
+            if (cleanLine.length > 0) {
+              replies.push(cleanLine);
+            }
+          }
+        }
+        
+        if (replies.length > 0) {
+          return replies.slice(0, 3); // Берем максимум 3 варианта
+        }
+      }
     }
     
-    let jsonString = jsonMatch[1] || jsonMatch[2];
     console.log('Extracted JSON string:', jsonString); // Для отладки
 
     try {
-      // Попытка исправить распространенные ошибки формата
-      const cleanedJsonString = jsonString
-        .replace(/\\n/g, "\\n")
-        .replace(/\\'/g, "\\'")
-        .replace(/\\"/g, '\\"')
-        .replace(/\\&/g, "\\&")
-        .replace(/\\r/g, "\\r")
-        .replace(/\\t/g, "\\t")
-        .replace(/\\b/g, "\\b")
-        .replace(/\\f/g, "\\f")
-        .replace(/[\u0000-\u0019]+/g,""); 
+      // Очищаем строку от потенциальных проблем
+      let cleanedJsonString = jsonString
+        .replace(/[\u0000-\u001F\u007F-\u009F]/g, '') // Удаляем control characters
+        .replace(/\n\s*/g, ' ') // Заменяем переносы строк на пробелы
+        .replace(/,\s*]/g, ']') // Удаляем trailing запятые
+        .replace(/,\s*}/g, '}') // Удаляем trailing запятые в объектах
+        .trim();
 
       const parsedResult = JSON.parse(cleanedJsonString);
       console.log('Parsed result:', parsedResult); // Для отладки
-      return parsedResult;
+      
+      // Проверяем что результат - массив строк
+      if (Array.isArray(parsedResult) && parsedResult.every(item => typeof item === 'string')) {
+        return parsedResult;
+      } else {
+        throw new Error('Ответ не является массивом строк');
+      }
     } catch (e) {
       console.error("Ошибка парсинга JSON строки:", jsonString, "Ошибка:", e);
-      throw new Error('Не удалось обработать ответ от Gemini.');
+      // Возвращаем дефолтные варианты если парсинг не удался
+      return ["Понял, спасибо", "Хорошо", "Сейчас проверю"];
     }
 
   } catch (error) {
