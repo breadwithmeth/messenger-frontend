@@ -102,6 +102,8 @@ const rewriteWithGemini = async (text, options = {}) => {
     }
 };
 
+// Закомментирована функция анализа сообщений (убрана по требованию)
+/*
 const analyzeMessageWithGemini = async (text) => {
   const apiKey = localStorage.getItem('gemini_api_key');
   if (!apiKey) {
@@ -141,6 +143,7 @@ const analyzeMessageWithGemini = async (text) => {
     throw new Error(error.response?.data?.error?.message || 'Не удалось проанализировать сообщение.');
   }
 };
+*/
 
 const suggestRepliesWithGemini = async (chatHistory, userContext) => {
   const apiKey = localStorage.getItem('gemini_api_key');
@@ -274,7 +277,6 @@ const api = {
     deleteWhatsAppAccount,
     resyncPhone,
     rewriteWithGemini,
-    analyzeMessageWithGemini,
     suggestRepliesWithGemini,
     getUsers,
     createUser,
@@ -295,7 +297,6 @@ export {
     deleteWhatsAppAccount,
     resyncPhone,
     rewriteWithGemini,
-    analyzeMessageWithGemini,
     suggestRepliesWithGemini,
     getUsers,
     createUser,

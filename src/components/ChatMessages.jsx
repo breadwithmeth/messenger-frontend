@@ -78,6 +78,7 @@ export default function ChatMessages({ messages, userId }) {
                 {/* Показываем имя отправителя для групп наших сообщений */}
                 {showSenderInfo && (
                   <Typography
+                    key={`sender-${msg.id}`}
                     variant="caption"
                     sx={{
                       color: 'text.secondary',
@@ -92,6 +93,7 @@ export default function ChatMessages({ messages, userId }) {
                   </Typography>
                 )}
                 <ChatBubble
+                  key={`bubble-${msg.id}`}
                   message={msg}
                   isMe={msg.fromMe || msg.senderId === userId}
                   showTime={true}
