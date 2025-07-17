@@ -28,7 +28,7 @@ export default function MessageGroupHeader({ senderUser, timestamp }) {
         sx={{ 
           color: 'text.secondary',
           fontWeight: 500,
-          fontSize: '0.75rem'
+          fontSize: '0.85rem' /* Увеличено для лучшей читаемости */
         }}
       >
         {displayName}
@@ -37,7 +37,7 @@ export default function MessageGroupHeader({ senderUser, timestamp }) {
         variant="caption" 
         sx={{ 
           color: 'text.secondary',
-          fontSize: '0.7rem',
+          fontSize: '0.8rem', /* Увеличено */
           opacity: 0.7
         }}
       >

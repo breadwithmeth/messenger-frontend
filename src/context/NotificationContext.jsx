@@ -48,7 +48,8 @@ export function NotificationProvider({ children, anchorOrigin = { vertical: 'bot
             fontWeight: 500,
             textTransform: 'uppercase',
             letterSpacing: '0.08em',
-            fontSize: '0.8rem',
+            fontSize: '0.875rem', /* Увеличено для лучшей читаемости */
+            lineHeight: 1.4,
             border: '2px solid',
             borderColor: notification.severity === 'error' ? '#FF0000' : 
                         notification.severity === 'warning' ? '#FF0000' : 

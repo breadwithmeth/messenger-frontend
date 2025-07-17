@@ -5,6 +5,7 @@ import {
   Typography,
   CircularProgress,
   Fade,
+  Button,
 } from "@mui/material";
 import api from "../api";
 import ChatSidebar from "../components/ChatSidebar";
@@ -104,6 +105,7 @@ function ChatMessages({ messages, userId, loading, isFirstLoad, onFirstLoadCompl
       {dates.map(date => (
         <React.Fragment key={date}>
           <Typography
+            key={`date-header-${date}`}
             variant="caption"
             component="div"
             align="center"
@@ -128,7 +130,7 @@ function ChatMessages({ messages, userId, loading, isFirstLoad, onFirstLoadCompl
             );
 
             return (
-              <React.Fragment key={msg.id}>
+              <React.Fragment key={`msg-fragment-${msg.id}`}>
                 {/* Показываем заголовок группы сообщений */}
                 {showSenderInfo && (
                   <MessageGroupHeader 
@@ -537,7 +539,7 @@ export default function Messenger({ onLogout }) {
                   }}>
                     {suggestedReplies.map((reply, index) => (
                       <Button 
-                        key={index} 
+                        key={`reply-${index}-${reply.slice(0, 10)}`} 
                         variant="outlined" 
                         size="small" 
                         onClick={() => setMessage(reply)}

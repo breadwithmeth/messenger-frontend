@@ -8,6 +8,8 @@ html, body, #root {
   background: #FFFFFF;
   color: #000000;
   font-feature-settings: 'kern' 1, 'liga' 1;
+  font-size: 16px; /* Базовый размер шрифта для лучшей читаемости */
+  line-height: 1.6; /* Увеличенный межстрочный интервал */
 }
 
 /* Swiss Style sidebar */
@@ -24,12 +26,13 @@ html, body, #root {
   padding: 24px 16px;
   border-bottom: 2px solid #000000;
   background: #FFFFFF;
-  font-size: 14px;
+  font-size: 16px; /* Увеличено с 14px */
   font-weight: 500;
   text-align: left;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #000000;
+  line-height: 1.4;
 }
 
 .sidebar-list {
@@ -66,22 +69,24 @@ html, body, #root {
 
 .sidebar-list .chat-title {
   font-weight: 500;
-  font-size: 16px;
+  font-size: 16px; /* Оставляем хороший размер */
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   color: inherit;
   letter-spacing: 0;
+  line-height: 1.4;
 }
 
 .sidebar-list .chat-preview {
-  font-size: 14px;
+  font-size: 15px; /* Увеличено с 14px */
   color: #666666;
   margin-top: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   letter-spacing: 0;
+  line-height: 1.4;
 }
 
 .sidebar-list li.selected .chat-preview {
@@ -102,7 +107,7 @@ html, body, #root {
   border-bottom: 2px solid #000000;
   background: #FFFFFF;
   font-weight: 500;
-  font-size: 16px;
+  font-size: 18px; /* Увеличено с 16px */
   color: #000000;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -110,6 +115,7 @@ html, body, #root {
   display: flex;
   align-items: center;
   box-shadow: none;
+  line-height: 1.4;
 }
 .chat-messages {
   flex: 1;

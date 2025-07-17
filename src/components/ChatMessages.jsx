@@ -51,6 +51,7 @@ export default function ChatMessages({ messages, userId }) {
       {dates.map((date) => (
         <React.Fragment key={date}>
           <Typography
+            key={`date-header-${date}`}
             variant="caption"
             align="center"
             sx={{
@@ -74,7 +75,7 @@ export default function ChatMessages({ messages, userId }) {
             );
             
             return (
-              <React.Fragment key={msg.id}>
+              <React.Fragment key={`msg-${msg.id}`}>
                 {/* Показываем имя отправителя для групп наших сообщений */}
                 {showSenderInfo && (
                   <Typography

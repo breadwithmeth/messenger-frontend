@@ -52,7 +52,7 @@ const swissTheme = createTheme({
       'Arial',
       'sans-serif',
     ].join(','),
-    // Swiss style typography hierarchy
+    // Swiss style typography hierarchy - улучшенная читаемость
     h1: {
       fontSize: '3rem',
       fontWeight: 300, // Light weight for Swiss style
@@ -90,28 +90,43 @@ const swissTheme = createTheme({
       lineHeight: 1.4,
     },
     body1: {
-      fontSize: '1rem',
+      fontSize: '1rem', // 16px - оптимальный размер для чтения
       fontWeight: 400,
-      lineHeight: 1.5,
-      letterSpacing: 0,
+      lineHeight: 1.6, // Увеличено для лучшей читаемости
+      letterSpacing: '0.01em', // Слегка увеличено
     },
     body2: {
-      fontSize: '0.875rem',
+      fontSize: '0.9rem', // Увеличено с 0.875rem для лучшей читаемости
       fontWeight: 400,
-      lineHeight: 1.43,
-      letterSpacing: 0,
+      lineHeight: 1.5, // Увеличено
+      letterSpacing: '0.01em',
     },
     caption: {
-      fontSize: '0.75rem',
+      fontSize: '0.8rem', // Увеличено с 0.75rem
       fontWeight: 400,
-      lineHeight: 1.33,
+      lineHeight: 1.4, // Увеличено
       letterSpacing: '0.03em',
       textTransform: 'uppercase',
     },
     button: {
+      fontSize: '0.875rem', // Добавлен размер для кнопок
       fontWeight: 500,
-      letterSpacing: '0.02em',
+      letterSpacing: '0.05em', // Увеличено для лучшей читаемости uppercase текста
       textTransform: 'uppercase',
+      lineHeight: 1.4,
+    },
+    // Добавляем специальные варианты для интерфейса
+    subtitle1: {
+      fontSize: '1.1rem',
+      fontWeight: 500,
+      lineHeight: 1.5,
+      letterSpacing: '0.01em',
+    },
+    subtitle2: {
+      fontSize: '0.95rem',
+      fontWeight: 500,
+      lineHeight: 1.4,
+      letterSpacing: '0.01em',
     }
   },
   components: {

@@ -77,8 +77,9 @@ export default function TopBar({ onLogout, audioControls }) {
             textTransform: 'uppercase',
             fontWeight: 500,
             letterSpacing: '0.08em',
-            fontSize: '0.75rem',
+            fontSize: '0.875rem', /* Увеличено для лучшей читаемости */
             padding: '8px 16px',
+            lineHeight: 1.4,
           }}
         >
           Настройки
@@ -93,8 +94,9 @@ export default function TopBar({ onLogout, audioControls }) {
           textTransform: 'uppercase',
           fontWeight: 500,
           letterSpacing: '0.08em',
-          fontSize: '0.75rem',
+          fontSize: '0.875rem', /* Увеличено для лучшей читаемости */
           padding: '8px 16px',
+          lineHeight: 1.4,
         }}
       >
         Выйти

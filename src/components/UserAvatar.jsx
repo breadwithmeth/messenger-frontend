@@ -32,7 +32,7 @@ export default function UserAvatar({ user, size = 32 }) {
       sx={{
         width: size,
         height: size,
-        fontSize: size * 0.4,
+        fontSize: size * 0.45, /* Увеличено с 0.4 для лучшей читаемости */
         fontWeight: 600,
         backgroundColor,
         color: 'white',
