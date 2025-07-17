@@ -12,13 +12,16 @@ import {
 } from "@mui/material";
 import UserAvatar from "./UserAvatar";
 
-export default function ChatSidebar({ chats, selectedChat, onSelect }) {
+export default function ChatSidebar({ chats, selectedChat, onSelect, newMessageCounts = {} }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem('jwtToken');
     window.location.reload();
   };
+
+  // Вычисляем общее количество новых сообщений
+  const totalNewMessages = Object.values(newMessageCounts).reduce((sum, count) => sum + count, 0);
 
   // Сортируем чаты по времени от новых к старым
   const sortedChats = [...chats].sort((a, b) => {
@@ -58,17 +61,44 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
           minHeight: '64px',
         }}
       >
-        <Typography 
-          variant="h6" 
-          fontWeight="500"
-          sx={{
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            fontSize: '1rem'
-          }}
-        >
-          Чаты
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Typography 
+            variant="h6" 
+            fontWeight="500"
+            sx={{
+              textTransform: 'uppercase',
+              letterSpacing: '0.08em',
+              fontSize: '1rem'
+            }}
+          >
+            Чаты
+          </Typography>
+          {totalNewMessages > 0 && (
+            <Box
+              sx={{
+                minWidth: 20,
+                height: 20,
+                backgroundColor: '#FF0000',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                px: totalNewMessages > 9 ? 0.5 : 0,
+              }}
+            >
+              <Typography
+                variant="caption"
+                sx={{
+                  color: '#FFFFFF',
+                  fontSize: '0.6rem',
+                  fontWeight: 'bold',
+                  lineHeight: 1,
+                }}
+              >
+                {totalNewMessages > 99 ? '99+' : totalNewMessages}
+              </Typography>
+            </Box>
+          )}
+        </Box>
         {/* <Box sx={{ display: 'flex', gap: 1 }}>
             <Button
               onClick={() => navigate("/settings")}
@@ -93,6 +123,10 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
         {sortedChats.map((chat) => {
           // Определяем, является ли чат неотвеченным (последнее сообщение не от нас)
           const isUnread = chat.lastMessage && !chat.lastMessage.fromMe;
+          // Определяем количество новых сообщений для этого чата
+          const newMessageCount = newMessageCounts[chat.id] || 0;
+          // Показываем badge если есть новые сообщения или чат неотвеченный
+          const showBadge = isUnread || newMessageCount > 0;
           
           return (
             <ListItem
@@ -117,11 +151,14 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
                     backgroundColor: '#333333',
                   },
                   '& .MuiTypography-root': {
-                    color: '#FFFFFF',
+                    color: '#FFFFFF !important',
+                  },
+                  '& *': {
+                    color: '#FFFFFF !important',
                   },
                 },
-                // Подсвечиваем неотвеченные чаты в Swiss Style
-                ...(isUnread && {
+                // Подсвечиваем неотвеченные чаты и чаты с новыми сообщениями в Swiss Style
+                ...(showBadge && {
                   backgroundColor: 'rgba(255, 0, 0, 0.04)',
                   borderLeft: '4px solid #FF0000',
                   '&:hover': {
@@ -133,6 +170,12 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
                     '&:hover': {
                       backgroundColor: '#333333',
                     },
+                    '& .MuiTypography-root': {
+                      color: '#FFFFFF !important',
+                    },
+                    '& *': {
+                      color: '#FFFFFF !important',
+                    },
                   },
                 }),
               }}
@@ -143,21 +186,66 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
                     variant="subtitle2" 
                     noWrap
                     sx={{ 
-                      fontWeight: isUnread ? 'bold' : 'normal',
+                      fontWeight: showBadge ? 'bold' : 'normal',
                       flex: 1 
                     }}
                   >
                     {chat.name || chat.remoteJid || chat.receivingPhoneJid}
                   </Typography>
-                  {isUnread && (
+                  {showBadge && (
                     <Box
                       sx={{
-                        width: 8,
-                        height: 8,
+                        minWidth: newMessageCount > 0 ? 24 : 20,
+                        height: 20,
                         backgroundColor: '#FF0000', // Swiss style red
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         flexShrink: 0,
+                        position: 'relative',
+                        px: newMessageCount > 9 ? 0.5 : 0,
                       }}
-                    />
+                    >
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: '#FFFFFF',
+                          fontSize: newMessageCount > 0 ? '0.6rem' : '0.7rem',
+                          fontWeight: 'bold',
+                          lineHeight: 1,
+                        }}
+                      >
+                        {newMessageCount > 0 ? (newMessageCount > 99 ? '99+' : newMessageCount) : '•'}
+                      </Typography>
+                      {/* Пульсирующий эффект для Swiss Style только при новых сообщениях */}
+                      {newMessageCount > 0 && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: '#FF0000',
+                            animation: 'pulse 2s infinite',
+                            '@keyframes pulse': {
+                              '0%': {
+                                opacity: 1,
+                                transform: 'scale(1)',
+                              },
+                              '50%': {
+                                opacity: 0.7,
+                                transform: 'scale(1.1)',
+                              },
+                              '100%': {
+                                opacity: 1,
+                                transform: 'scale(1)',
+                              },
+                            },
+                          }}
+                        />
+                      )}
+                    </Box>
                   )}
                 </Box>
                 <Typography
@@ -166,7 +254,7 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
                   noWrap
                   sx={{ 
                     mb: 0.5,
-                    fontWeight: isUnread ? 'medium' : 'normal',
+                    fontWeight: showBadge ? 'medium' : 'normal',
                   }}
                 >
                   {/* Показываем префикс отправителя */}

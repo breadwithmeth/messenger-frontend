@@ -23,20 +23,23 @@ import ChatInfoSidebar from "../components/ChatInfoSidebar";
 import ChatBubble from "../components/ChatBubble"; // Импортируем правильный компонент
 import MessageGroupHeader from "../components/MessageGroupHeader";
 import TopBar from "../components/TopBar";
+import { useNotification } from "../context/NotificationContext";
+import { useAudioNotification } from "../hooks/useAudioNotification";
 
-function ChatMessages({ messages, userId, loading }) {
+function ChatMessages({ messages, userId, loading, isFirstLoad, onFirstLoadComplete }) {
   const theme = useTheme();
   const containerRef = useRef(null);
 
   useEffect(() => {
-    if (containerRef.current) {
-      // Плавная прокрутка
+    // Прокручиваем вниз только при первой загрузке сообщений
+    if (containerRef.current && isFirstLoad && messages.length > 0) {
       containerRef.current.scrollTo({
         top: containerRef.current.scrollHeight,
         behavior: 'smooth'
       });
+      onFirstLoadComplete();
     }
-  }, [messages]);
+  }, [messages, isFirstLoad, onFirstLoadComplete]);
 
   const scrollToBottom = () => {
     if (containerRef.current) {
@@ -44,9 +47,10 @@ function ChatMessages({ messages, userId, loading }) {
     }
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  // Убираем автоматическое прокручивание при каждом обновлении
+  // useEffect(() => {
+  //   scrollToBottom();
+  // }, [messages]);
 
   if (loading) {
     return (
@@ -419,6 +423,8 @@ function ChatInput({ value, onChange, onSend, disabled, onRewrite, isRewriting }
 
 export default function Messenger({ onLogout }) {
   const theme = useTheme();
+  const { showNotification } = useNotification();
+  const { playNotificationSound, enableAudio, isAudioEnabled, hasUserInteracted } = useAudioNotification();
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -430,13 +436,68 @@ export default function Messenger({ onLogout }) {
   const [phoneInfoLoading, setPhoneInfoLoading] = useState(false);
   const [suggestedReplies, setSuggestedReplies] = useState([]);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [isFirstMessageLoad, setIsFirstMessageLoad] = useState(true);
   const lastProcessedMessageIdRef = React.useRef(null);
+  
+  // Для уведомлений о новых сообщениях
+  const [lastKnownMessageCounts, setLastKnownMessageCounts] = useState({});
+  const [newMessageCounts, setNewMessageCounts] = useState({});
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
     const fetchChats = async () => {
       try {
         const data = await api.getChats();
+        
+        // Проверяем новые сообщения для уведомлений
+        if (initialLoadComplete) {
+          const newCounts = { ...newMessageCounts };
+          
+          data.forEach(chat => {
+            const chatId = chat.id;
+            const lastMessage = chat.lastMessage;
+            
+            if (lastMessage && !lastMessage.fromMe) {
+              const lastKnown = lastKnownMessageCounts[chatId];
+              const currentMessageId = lastMessage.id;
+              
+              // Если это новое сообщение от клиента
+              if (lastKnown && lastKnown !== currentMessageId) {
+                // Если мы не в этом чате, увеличиваем счетчик
+                if (selectedChat?.id !== chatId) {
+                  newCounts[chatId] = (newCounts[chatId] || 0) + 1;
+                  
+                  // Показываем уведомление
+                  const chatName = chat.name || chat.remoteJid?.split('@')[0] || 'Неизвестный чат';
+                  const messagePreview = lastMessage.content?.length > 50 
+                    ? lastMessage.content.slice(0, 50) + '...' 
+                    : lastMessage.content || 'Новое сообщение';
+                  
+                  showNotification(
+                    `${chatName}: ${messagePreview}`,
+                    'info'
+                  );
+                  
+                  // Воспроизводим звук уведомления (Swiss Style: функциональность без излишеств)
+                  playNotificationSound();
+                }
+              }
+            }
+          });
+          
+          setNewMessageCounts(newCounts);
+        }
+        
+        // Обновляем счетчики сообщений
+        const updatedMessageCounts = {};
+        data.forEach(chat => {
+          if (chat.lastMessage) {
+            updatedMessageCounts[chat.id] = chat.lastMessage.id;
+          }
+        });
+        setLastKnownMessageCounts(updatedMessageCounts);
+        
         // Сортируем чаты по времени от новых к старым
         const sorted = [...data].sort((a, b) => {
           // Сначала сортируем по статусу ответа (неотвеченные сверху)
@@ -453,7 +514,13 @@ export default function Messenger({ onLogout }) {
           };
           return getTime(b) - getTime(a);
         });
-        if (isMounted) setChats(sorted);
+        
+        if (isMounted) {
+          setChats(sorted);
+          if (!initialLoadComplete) {
+            setInitialLoadComplete(true);
+          }
+        }
       } catch {
         if (isMounted) {
           console.error('Не удалось загрузить чаты');
@@ -464,7 +531,7 @@ export default function Messenger({ onLogout }) {
     // Обновляем чаты каждые 2 секунды
     const interval = setInterval(fetchChats, 2000);
     return () => { isMounted = false; clearInterval(interval); };
-  }, []);
+  }, [selectedChat, initialLoadComplete, lastKnownMessageCounts, newMessageCounts, showNotification, playNotificationSound]);
 
   useEffect(() => {
     if (!selectedChat) return;
@@ -694,6 +761,15 @@ export default function Messenger({ onLogout }) {
 
   const handleSelectChat = (chat) => {
     setSelectedChat(chat);
+    setIsFirstMessageLoad(true); // Сбрасываем флаг при выборе нового чата
+    
+    // Очищаем счетчик новых сообщений для выбранного чата
+    if (newMessageCounts[chat.id] > 0) {
+      setNewMessageCounts(prev => ({
+        ...prev,
+        [chat.id]: 0
+      }));
+    }
   };
 
   return (
@@ -702,14 +778,28 @@ export default function Messenger({ onLogout }) {
         chats={chats}
         selectedChat={selectedChat}
         onSelect={handleSelectChat}
+        newMessageCounts={newMessageCounts}
       />
       <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', height: '100vh' }}>
-        <TopBar onLogout={onLogout} />
+        <TopBar 
+          onLogout={onLogout} 
+          audioControls={{
+            enableAudio,
+            isAudioEnabled,
+            hasUserInteracted
+          }}
+        />
         <Box sx={{ flex: 1, display: 'flex', flexDirection: 'row', overflow: 'hidden' }}>
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
             {selectedChat ? (
               <>
-                <ChatMessages messages={messages} userId={null} loading={loading} />
+                <ChatMessages 
+                  messages={messages} 
+                  userId={null} 
+                  loading={loading} 
+                  isFirstLoad={isFirstMessageLoad}
+                  onFirstLoadComplete={() => setIsFirstMessageLoad(false)}
+                />
                 {loadingSuggestions && (
                   <Box sx={{ px: 2, py: 1, display: 'flex', alignItems: 'center', gap: 1, justifyContent: 'center' }}>
                     <CircularProgress size={20} />

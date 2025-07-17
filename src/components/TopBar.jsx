@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Button } from '@mui/material';
+import { Box, Button, IconButton, Tooltip } from '@mui/material';
+import { VolumeUp, VolumeOff } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 
-export default function TopBar({ onLogout }) {
+export default function TopBar({ onLogout, audioControls }) {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
 
@@ -40,6 +41,31 @@ export default function TopBar({ onLogout }) {
         boxShadow: 'none',
       }}
     >
+      {/* Кнопка управления звуковыми уведомлениями */}
+      {audioControls && (
+        <Tooltip title={audioControls.isAudioEnabled ? 'Отключить звук' : 'Включить звук'}>
+          <IconButton
+            onClick={audioControls.enableAudio}
+            sx={{
+              color: audioControls.isAudioEnabled ? '#FF0000' : '#666666',
+              borderRadius: 0, // Swiss Style
+              border: '1px solid',
+              borderColor: audioControls.isAudioEnabled ? '#FF0000' : '#666666',
+              width: 36,
+              height: 36,
+              mr: 2,
+              '&:hover': {
+                backgroundColor: 'rgba(255, 0, 0, 0.04)',
+                borderColor: '#FF0000',
+                color: '#FF0000',
+              }
+            }}
+          >
+            {audioControls.isAudioEnabled ? <VolumeUp fontSize="small" /> : <VolumeOff fontSize="small" />}
+          </IconButton>
+        </Tooltip>
+      )}
+
       {currentUser?.role === 'admin' && (
         <Button 
           variant="outlined" 

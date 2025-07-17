@@ -1,15 +1,25 @@
-import React, { useRef, useEffect } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { Box, Typography } from "@mui/material";
 import ChatBubble from "./ChatBubble";
 
 export default function ChatMessages({ messages, userId }) {
   const endRef = useRef(null);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
 
   useEffect(() => {
-    if (endRef.current) {
+    // Прокручиваем вниз только при первой загрузке сообщений
+    if (endRef.current && isFirstLoad && messages.length > 0) {
       endRef.current.scrollIntoView({ behavior: "smooth" });
+      setIsFirstLoad(false);
     }
-  }, [messages]);
+  }, [messages, isFirstLoad]);
+
+  // Сбрасываем флаг при смене чата (когда messages становится пустым)
+  useEffect(() => {
+    if (messages.length === 0) {
+      setIsFirstLoad(true);
+    }
+  }, [messages.length]);
 
   const groupByDate = (msgs) => {
     const groups = {};

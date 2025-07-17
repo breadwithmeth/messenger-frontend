@@ -9,6 +9,7 @@ import Auth from './components/Auth';
 import ErrorBoundary from './components/ErrorBoundary';
 import { Box } from '@mui/material';
 import LandingPage from './pages/LandingPage'; // Импортируем лендинг
+import { NotificationProvider } from './context/NotificationContext';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = React.useState(!!localStorage.getItem('jwtToken'));
@@ -25,23 +26,25 @@ export default function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <ErrorBoundary>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={!isAuthenticated ? <LandingPage /> : <Navigate to="/messenger" />} />
-            <Route path="/login" element={!isAuthenticated ? <Auth onLoginSuccess={handleLoginSuccess} /> : <Navigate to="/messenger" />} />
-            
-            {isAuthenticated && (
-              <>
-                <Route path="/messenger" element={<Messenger onLogout={handleLogout} />} />
-                <Route path="/settings/*" element={<Settings onLogout={handleLogout} />} />
-              </>
-            )}
-            
-            <Route path="*" element={<Navigate to={isAuthenticated ? "/messenger" : "/"} />} />
-          </Routes>
-        </BrowserRouter>
-      </ErrorBoundary>
+      <NotificationProvider anchorOrigin={{ vertical: 'top', horizontal: 'right' }}>
+        <ErrorBoundary>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={!isAuthenticated ? <LandingPage /> : <Navigate to="/messenger" />} />
+              <Route path="/login" element={!isAuthenticated ? <Auth onLoginSuccess={handleLoginSuccess} /> : <Navigate to="/messenger" />} />
+              
+              {isAuthenticated && (
+                <>
+                  <Route path="/messenger" element={<Messenger onLogout={handleLogout} />} />
+                  <Route path="/settings/*" element={<Settings onLogout={handleLogout} />} />
+                </>
+              )}
+              
+              <Route path="*" element={<Navigate to={isAuthenticated ? "/messenger" : "/"} />} />
+            </Routes>
+          </BrowserRouter>
+        </ErrorBoundary>
+      </NotificationProvider>
     </ThemeProvider>
   );
 }
