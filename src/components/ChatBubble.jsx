@@ -20,7 +20,7 @@ const MediaContent = ({ message }) => {
         sx={{
           maxWidth: '100%',
           maxHeight: '300px',
-          borderRadius: '1rem',
+          borderRadius: 0, // Swiss style: no rounded corners
           mt: message.content ? 1 : 0,
           cursor: 'pointer',
         }}
@@ -38,7 +38,7 @@ const MediaContent = ({ message }) => {
         sx={{
           maxWidth: '100%',
           maxHeight: '300px',
-          borderRadius: '1rem',
+          borderRadius: 0, // Swiss style: no rounded corners
           mt: message.content ? 1 : 0,
         }}
       />
@@ -108,17 +108,17 @@ export default function ChatBubble({ message, isMe, showTime }) {
         minWidth: '60px',
         p: '0.875rem 1.25rem',
         mb: '0.5rem',
-        borderRadius: '1.25rem',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+        borderRadius: 0, // Swiss style: rectangular bubbles
+        boxShadow: 'none',
         fontSize: '0.9375rem',
         whiteSpace: 'pre-wrap',
         wordBreak: 'break-word',
         position: 'relative',
-        transition: 'all 0.2s',
+        transition: 'none', // No animations in Swiss style
         alignSelf: isMe ? 'flex-end' : 'flex-start',
-        bgcolor: isMe ? 'primary.main' : 'background.paper',
-        color: isMe ? 'common.white' : 'text.primary',
-        border: theme => isMe ? 'none' : `1px solid ${theme.palette.divider}`
+        bgcolor: isMe ? '#000000' : '#FFFFFF',
+        color: isMe ? '#FFFFFF' : '#000000',
+        border: '2px solid #000000'
       }}
     >
       {/* Больше не показываем имя отправителя внутри bubble, 
@@ -130,7 +130,7 @@ export default function ChatBubble({ message, isMe, showTime }) {
             p: 1.5,
             mb: 1,
             bgcolor: isMe ? 'rgba(0,0,0,0.15)' : 'action.hover',
-            borderRadius: '1rem',
+            borderRadius: 0, // Swiss style: rectangular quotes
             borderLeft: '3px solid',
             borderColor: isMe ? 'rgba(255,255,255,0.5)' : 'primary.main',
           }}

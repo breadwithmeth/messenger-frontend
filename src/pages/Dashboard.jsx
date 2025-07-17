@@ -173,8 +173,8 @@ function Dashboard() {
                       <div style={{
                         width: 8,
                         height: 8,
-                        borderRadius: '50%',
-                        backgroundColor: '#ff9800',
+                        borderRadius: 0, // Swiss style: square indicator
+                        backgroundColor: '#FF0000', // Swiss style red
                         flexShrink: 0,
                       }} />
                     )}
@@ -223,13 +223,14 @@ function Dashboard() {
                     key={msg.id}
                     style={{
                       alignSelf: isMe ? 'flex-end' : 'flex-start',
-                      background: isMe ? '#e6e6e6' : '#f9f9f9',
+                      background: isMe ? '#000000' : '#FFFFFF',
+                      color: isMe ? '#FFFFFF' : '#000000',
                       padding: '10px 14px',
-                      borderRadius: 10,
+                      borderRadius: 0, // Swiss style: rectangular bubbles
                       marginBottom: 8,
                       maxWidth: '70%',
                       fontSize: 15,
-                      border: '1px solid #ccc',
+                      border: '2px solid #000000',
                       wordBreak: 'break-word',
                       userSelect: 'text',
                     }}
@@ -257,9 +258,11 @@ function Dashboard() {
                   flex: 1,
                   padding: 12,
                   fontSize: 16,
-                  borderRadius: 6,
-                  border: '1px solid #ccc',
+                  borderRadius: 0, // Swiss style: rectangular input
+                  border: '2px solid #000000',
                   outline: 'none',
+                  backgroundColor: '#FFFFFF',
+                  fontFamily: '"Helvetica Neue", Arial, sans-serif',
                 }}
                 autoComplete="off"
               />
@@ -268,15 +271,19 @@ function Dashboard() {
                 disabled={sending || !message.trim()}
                 style={{
                   marginLeft: 8,
-                  padding: '0 20px',
-                  background: '#333',
-                  color: '#fff',
-                  border: 'none',
-                  fontWeight: 600,
-                  borderRadius: 6,
+                  padding: '12px 24px',
+                  background: '#000000',
+                  color: '#FFFFFF',
+                  border: '2px solid #000000',
+                  fontWeight: 500,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  fontSize: '0.875rem',
+                  borderRadius: 0, // Swiss style: rectangular send button
                   cursor: sending || !message.trim() ? 'not-allowed' : 'pointer',
                   opacity: sending || !message.trim() ? 0.6 : 1,
                   transition: 'opacity 0.2s',
+                  fontFamily: '"Helvetica Neue", Arial, sans-serif',
                 }}
               >
                 Отправить

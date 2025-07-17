@@ -234,14 +234,24 @@ function ChatInput({ value, onChange, onSend, disabled, onRewrite, isRewriting }
         sx={{
           display: 'flex',
           alignItems: 'center',
-          p: 2,
-          borderTop: '1px solid',
-          borderColor: 'divider',
+          p: 3,
+          borderTop: '2px solid',
+          borderColor: 'primary.main',
           bgcolor: 'background.paper',
-          gap: 1,
+          gap: 2,
         }}
       >
-        <Button onClick={handleClick} disabled={disabled} variant="text" color="primary" sx={{ p: '8px 16px', minWidth: 'auto' }}>
+        <Button onClick={handleClick} disabled={disabled} variant="outlined" color="primary" 
+          sx={{ 
+            p: '12px 16px', 
+            minWidth: 'auto',
+            borderRadius: 0,
+            textTransform: 'uppercase',
+            fontWeight: 500,
+            letterSpacing: '0.08em',
+            fontSize: '0.75rem',
+          }}
+        >
           Шаблон
         </Button>
         <Menu
@@ -275,18 +285,21 @@ function ChatInput({ value, onChange, onSend, disabled, onRewrite, isRewriting }
             mr: 1,
             ml: 1,
             '& .MuiOutlinedInput-root': {
-              borderRadius: '24px',
-              backgroundColor: '#F8F8F8',
-              border: 'none',
+              borderRadius: 0, // Swiss style: rectangular
+              backgroundColor: '#FFFFFF',
+              border: '2px solid #000000',
               '& fieldset': {
                 border: 'none',
               },
               '&:hover': {
-                backgroundColor: '#F2F2F2',
+                backgroundColor: '#F8F8F8',
               },
               '&.Mui-focused': {
                 backgroundColor: '#FFFFFF',
-                boxShadow: '0 0 0 1px rgba(0, 122, 255, 0.3)',
+                borderColor: '#FF0000', // Swiss red focus
+                '& .MuiOutlinedInput-notchedOutline': {
+                  border: '2px solid #FF0000',
+                },
               },
             }
           }}
@@ -297,14 +310,18 @@ function ChatInput({ value, onChange, onSend, disabled, onRewrite, isRewriting }
         <Button 
           onClick={handleImproveMessage} 
           disabled={disabled || !value.trim()} 
-          variant="text" 
+          variant="outlined" 
           color="primary" 
           sx={{ 
-            p: '8px 16px', 
+            p: '12px 16px', 
             minWidth: 'auto',
-            borderRadius: '20px',
+            borderRadius: 0, // Swiss style
+            textTransform: 'uppercase',
+            fontWeight: 500,
+            letterSpacing: '0.08em',
+            fontSize: '0.75rem',
             '&:hover': {
-              backgroundColor: 'rgba(0, 122, 255, 0.04)',
+              backgroundColor: '#F0F0F0',
             }
           }}
         >
@@ -316,11 +333,26 @@ function ChatInput({ value, onChange, onSend, disabled, onRewrite, isRewriting }
           color="primary"
           variant="contained"
           sx={{ 
-            p: '8px 16px', 
-            borderRadius: '20px',
+            p: '12px 24px', 
+            borderRadius: 0, // Swiss style: rectangular
+            textTransform: 'uppercase',
+            fontWeight: 500,
+            letterSpacing: '0.08em',
+            fontSize: '0.875rem',
             boxShadow: 'none',
+            minWidth: '120px',
+            border: '2px solid #000000',
+            backgroundColor: '#000000',
+            color: '#FFFFFF',
             '&:hover': {
-              boxShadow: '0 2px 8px rgba(0, 122, 255, 0.2)',
+              backgroundColor: '#FFFFFF',
+              color: '#000000',
+              boxShadow: 'none',
+            },
+            '&:disabled': {
+              backgroundColor: '#E0E0E0',
+              color: '#CCCCCC',
+              border: '2px solid #E0E0E0',
             }
           }}
         >
@@ -330,7 +362,7 @@ function ChatInput({ value, onChange, onSend, disabled, onRewrite, isRewriting }
       <Dialog open={dialogOpen} onClose={handleDialogClose} fullWidth maxWidth="sm">
         <DialogTitle sx={{fontFamily: '"Press Start 2P", cursive'}}>Улучшить текст</DialogTitle>
         <DialogContent>
-          <Typography variant="body1" gutterBottom sx={{ mt: 2, p: 2, bgcolor: 'action.hover', borderRadius: 1, border: '2px dashed', borderColor: 'divider' }}>
+          <Typography variant="body1" gutterBottom sx={{ mt: 2, p: 2, bgcolor: 'action.hover', borderRadius: 0, border: '2px dashed #000000', borderColor: '#000000' }}>
             {textToRewrite}
           </Typography>
           <FormControl fullWidth margin="normal">
@@ -702,14 +734,16 @@ export default function Messenger({ onLogout }) {
                         size="small" 
                         onClick={() => setMessage(reply)}
                         sx={{
-                          borderRadius: '16px',
+                          borderRadius: 0, // Swiss style: rectangular
                           textTransform: 'none',
                           fontSize: '0.875rem',
-                          borderColor: 'rgba(0, 122, 255, 0.3)',
-                          color: 'primary.main',
+                          fontWeight: 400,
+                          border: '1px solid #000000',
+                          color: '#000000',
+                          padding: '8px 16px',
                           '&:hover': {
-                            backgroundColor: 'rgba(0, 122, 255, 0.04)',
-                            borderColor: 'primary.main',
+                            backgroundColor: '#F0F0F0',
+                            borderColor: '#000000',
                           }
                         }}
                       >

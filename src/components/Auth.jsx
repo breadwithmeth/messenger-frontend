@@ -49,13 +49,19 @@ function Auth({ onLoginSuccess }) {
           p: 4,
           width: '100%',
           maxWidth: 400,
-          borderRadius: '20px',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
-          border: '1px solid',
-          borderColor: 'divider'
+          borderRadius: 0,
+          boxShadow: 'none',
+          border: '2px solid',
+          borderColor: 'primary.main'
         }}
       >
-        <Typography variant="h5" component="h1" gutterBottom align="center" fontWeight="600" color="text.primary">
+        <Typography variant="h5" component="h1" gutterBottom align="center" fontWeight="500" color="text.primary"
+          sx={{ 
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            fontSize: '1.25rem'
+          }}
+        >
           Вход в систему
         </Typography>
         
@@ -98,13 +104,15 @@ function Auth({ onLoginSuccess }) {
             disabled={loading}
             sx={{ 
               mt: 3,
-              borderRadius: '20px',
-              textTransform: 'none',
-              fontSize: '1rem',
-              fontWeight: 600,
+              borderRadius: 0,
+              textTransform: 'uppercase',
+              fontSize: '0.875rem',
+              fontWeight: 500,
+              letterSpacing: '0.08em',
               boxShadow: 'none',
+              padding: '12px 24px',
               '&:hover': {
-                boxShadow: '0 4px 16px rgba(0, 122, 255, 0.3)',
+                boxShadow: 'none',
               }
             }}
           >

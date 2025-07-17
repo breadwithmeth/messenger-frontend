@@ -16,7 +16,7 @@ const FeatureCard = ({ icon, title, description }) => (
       justifyContent: 'center',
       backgroundColor: 'rgba(255, 255, 255, 0.9)',
       backdropFilter: 'blur(10px)',
-      borderRadius: 4,
+      borderRadius: 0, // Swiss style: rectangular cards
       border: '1px solid rgba(0, 0, 0, 0.1)'
     }}
   >
@@ -69,12 +69,22 @@ export default function LandingPage() {
                 size="large" 
                 onClick={() => navigate('/login')}
                 sx={{ 
-                  borderRadius: '20px', 
+                  borderRadius: 0, // Swiss style: rectangular button
                   px: 5, 
                   py: 1.5,
-                  textTransform: 'none',
+                  textTransform: 'uppercase',
+                  fontWeight: 500,
+                  letterSpacing: '0.08em',
                   fontSize: '1.1rem',
-                  boxShadow: '0 4px 15px rgba(0, 122, 255, 0.4)'
+                  boxShadow: 'none',
+                  border: '2px solid #000000',
+                  backgroundColor: '#000000',
+                  color: '#FFFFFF',
+                  '&:hover': {
+                    backgroundColor: '#FFFFFF',
+                    color: '#000000',
+                    boxShadow: 'none',
+                  }
                 }}
               >
                 Начать работу

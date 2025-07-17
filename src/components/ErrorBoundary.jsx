@@ -36,13 +36,12 @@ class ErrorBoundary extends React.Component {
             sx={{
               p: 4,
               maxWidth: 500,
-              borderRadius: '20px',
-              boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08)',
-              border: '1px solid',
-              borderColor: 'divider'
+              borderRadius: 0, // Swiss style: rectangular paper
+              boxShadow: 'none',
+              border: '2px solid #000000'
             }}
           >
-            <Alert severity="error" sx={{ mb: 3, borderRadius: '16px' }}>
+            <Alert severity="error" sx={{ mb: 3, borderRadius: 0, border: '2px solid #FF0000' }}>
               <Typography variant="h6" gutterBottom>
                 Что-то пошло не так
               </Typography>
@@ -62,7 +61,7 @@ class ErrorBoundary extends React.Component {
                     fontFamily: 'monospace',
                     backgroundColor: '#F5F5F5',
                     p: 2,
-                    borderRadius: 2,
+                    borderRadius: 0, // Swiss style: rectangular input
                     fontSize: '0.875rem',
                     color: 'text.secondary'
                   }}
@@ -77,11 +76,14 @@ class ErrorBoundary extends React.Component {
                 variant="contained"
                 onClick={() => window.location.reload()}
                 sx={{
-                  borderRadius: '20px',
-                  textTransform: 'none',
+                  borderRadius: 0, // Swiss style: rectangular button
+                  textTransform: 'uppercase',
+                  fontWeight: 500,
+                  letterSpacing: '0.08em',
                   boxShadow: 'none',
                   '&:hover': {
-                    boxShadow: '0 4px 16px rgba(0, 122, 255, 0.3)',
+                    boxShadow: 'none',
+                    backgroundColor: '#333333',
                   }
                 }}
               >
@@ -91,8 +93,10 @@ class ErrorBoundary extends React.Component {
                 variant="outlined"
                 onClick={() => this.setState({ hasError: false, error: null, errorInfo: null })}
                 sx={{
-                  borderRadius: '20px',
-                  textTransform: 'none',
+                  borderRadius: 0, // Swiss style: rectangular button
+                  textTransform: 'uppercase',
+                  fontWeight: 500,
+                  letterSpacing: '0.08em',
                 }}
               >
                 Попробовать снова

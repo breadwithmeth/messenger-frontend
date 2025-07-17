@@ -35,7 +35,7 @@ export default function ChatInput({ value, onChange, onSend, disabled }) {
         size="small"
         sx={{
           '& .MuiOutlinedInput-root': {
-            borderRadius: 2,
+            borderRadius: 0, // Swiss style: rectangular input
           }
         }}
       />
@@ -46,7 +46,7 @@ export default function ChatInput({ value, onChange, onSend, disabled }) {
         endIcon={<SendIcon />}
         sx={{
           minWidth: 110,
-          borderRadius: 2,
+          borderRadius: 0, // Swiss style: rectangular send button
           textTransform: 'none'
         }}
       >

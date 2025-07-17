@@ -10,7 +10,7 @@ import UsersPage from '../components/settings/Users';
 import api from '../api';
 
 const navLinkStyles = {
-  borderRadius: '12px',
+  borderRadius: 0, // Swiss style: rectangular navigation
   mb: 0.5,
   mx: 1,
   '&.active': {
@@ -97,7 +97,7 @@ export default function Settings({ onLogout }) {
               startIcon={<ArrowLeft />} 
               size="small"
               sx={{
-                borderRadius: '20px',
+                borderRadius: 0, // Swiss style: rectangular button
                 textTransform: 'none',
                 '&:hover': {
                   backgroundColor: 'rgba(0, 122, 255, 0.04)',

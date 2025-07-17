@@ -33,44 +33,42 @@ export default function TopBar({ onLogout }) {
         display: 'flex',
         justifyContent: 'flex-end',
         alignItems: 'center',
-        p: 1,
-        borderBottom: '1px solid',
-        borderColor: 'divider',
+        p: 2,
+        borderBottom: '2px solid',
+        borderColor: 'primary.main',
         bgcolor: 'background.paper',
-        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.04)',
+        boxShadow: 'none',
       }}
     >
       {currentUser?.role === 'admin' && (
         <Button 
-          variant="text" 
+          variant="outlined" 
           color="primary" 
           onClick={() => navigate('/settings')}
           sx={{ 
-            mr: 1,
-            borderRadius: '20px',
-            textTransform: 'none',
+            mr: 2,
+            borderRadius: 0,
+            textTransform: 'uppercase',
             fontWeight: 500,
-            '&:hover': {
-              backgroundColor: 'rgba(0, 122, 255, 0.04)',
-            }
+            letterSpacing: '0.08em',
+            fontSize: '0.75rem',
+            padding: '8px 16px',
           }}
         >
           Настройки
         </Button>
       )}
       <Button 
-        variant="outlined" 
-        color="error" 
+        variant="contained" 
+        color="primary" 
         onClick={handleLogoutClick}
         sx={{
-          borderRadius: '20px',
-          textTransform: 'none',
+          borderRadius: 0,
+          textTransform: 'uppercase',
           fontWeight: 500,
-          borderWidth: '1px',
-          '&:hover': {
-            backgroundColor: 'rgba(244, 67, 54, 0.04)',
-            borderWidth: '1px',
-          }
+          letterSpacing: '0.08em',
+          fontSize: '0.75rem',
+          padding: '8px 16px',
         }}
       >
         Выйти

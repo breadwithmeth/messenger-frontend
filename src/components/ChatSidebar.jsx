@@ -37,8 +37,8 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
       sx={{
         width: 320,
         height: '100vh',
-        borderRight: 1,
-        borderColor: 'divider',
+        borderRight: 2,
+        borderColor: 'primary.main',
         display: 'flex',
         flexDirection: 'column',
         flexShrink: 0,
@@ -49,16 +49,24 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
     >
       <Box
         sx={{
-          p: 2,
-          borderBottom: 1,
-          borderColor: 'divider',
+          p: 3,
+          borderBottom: 2,
+          borderColor: 'primary.main',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
           minHeight: '64px',
         }}
       >
-        <Typography variant="h6" fontWeight="bold">
+        <Typography 
+          variant="h6" 
+          fontWeight="500"
+          sx={{
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            fontSize: '1rem'
+          }}
+        >
           Чаты
         </Typography>
         {/* <Box sx={{ display: 'flex', gap: 1 }}>
@@ -93,33 +101,37 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
               selected={selectedChat?.id === chat.id}
               onClick={() => onSelect(chat)}
               sx={{
-                borderRadius: '8px',
-                mb: 0.5,
+                borderRadius: 0, // Swiss style: no rounded corners
+                mb: 0,
                 position: 'relative',
+                borderBottom: '1px solid #E0E0E0',
+                transition: 'all 0.15s ease-in-out',
                 '&:hover': {
-                  backgroundColor: 'rgba(0, 122, 255, 0.04)',
-                  transform: 'translateX(2px)',
+                  backgroundColor: '#F8F8F8',
+                  transform: 'none',
                 },
                 '&.Mui-selected': {
-                  backgroundColor: 'rgba(0, 122, 255, 0.08)',
-                  borderLeft: '2px solid',
-                  borderLeftColor: 'primary.main',
+                  backgroundColor: '#000000',
+                  color: '#FFFFFF',
                   '&:hover': {
-                    backgroundColor: 'rgba(0, 122, 255, 0.12)',
+                    backgroundColor: '#333333',
+                  },
+                  '& .MuiTypography-root': {
+                    color: '#FFFFFF',
                   },
                 },
-                // Подсвечиваем неотвеченные чаты минималистично
+                // Подсвечиваем неотвеченные чаты в Swiss Style
                 ...(isUnread && {
-                  backgroundColor: 'rgba(255, 152, 0, 0.04)',
-                  borderLeft: '2px solid',
-                  borderLeftColor: 'warning.main',
+                  backgroundColor: 'rgba(255, 0, 0, 0.04)',
+                  borderLeft: '4px solid #FF0000',
                   '&:hover': {
-                    backgroundColor: 'rgba(255, 152, 0, 0.08)',
+                    backgroundColor: 'rgba(255, 0, 0, 0.08)',
                   },
                   '&.Mui-selected': {
-                    backgroundColor: 'rgba(255, 152, 0, 0.12)',
+                    backgroundColor: '#000000',
+                    borderLeft: '4px solid #FF0000',
                     '&:hover': {
-                      backgroundColor: 'rgba(255, 152, 0, 0.16)',
+                      backgroundColor: '#333333',
                     },
                   },
                 }),
@@ -140,10 +152,9 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
                   {isUnread && (
                     <Box
                       sx={{
-                        width: 6,
-                        height: 6,
-                        borderRadius: '50%',
-                        backgroundColor: 'warning.main',
+                        width: 8,
+                        height: 8,
+                        backgroundColor: '#FF0000', // Swiss style red
                         flexShrink: 0,
                       }}
                     />

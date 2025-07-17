@@ -1,149 +1,160 @@
 import { createTheme } from '@mui/material/styles';
 
-const appleTheme = createTheme({
+// Swiss Style Design System
+const swissTheme = createTheme({
   palette: {
     mode: 'light',
     primary: {
-      main: '#007AFF', // Apple's primary blue
-      light: '#40A4FF',
-      dark: '#0056CC',
+      main: '#000000', // Pure black - Swiss style foundation
+      light: '#333333',
+      dark: '#000000',
     },
     secondary: {
-      main: '#5856D6', // Apple's purple
-      light: '#7B79DC',
-      dark: '#4340B8',
+      main: '#FF0000', // Bold red accent - typical Swiss style
+      light: '#FF3333',
+      dark: '#CC0000',
     },
     background: {
-      default: '#F8F8F8', // Более светлый фон
+      default: '#FFFFFF', // Pure white background
       paper: '#FFFFFF',
     },
     text: {
-      primary: '#1C1C1E',
-      secondary: '#8E8E93', // Более светлый серый
-      disabled: '#C7C7CC',
+      primary: '#000000', // High contrast black text
+      secondary: '#666666', // Medium gray for secondary text
+      disabled: '#CCCCCC',
     },
-    divider: 'rgba(60, 60, 67, 0.05)', // Еще более тонкие разделители
+    divider: '#E0E0E0', // Clean gray dividers
     success: {
-      main: '#30D158', // Apple's green
-      light: '#5DE67E',
-      dark: '#28B946',
+      main: '#00AA00', // Clean green
+      light: '#33BB33',
+      dark: '#008800',
     },
     error: {
-      main: '#FF453A', // Apple's red
-      light: '#FF6B63',
-      dark: '#D70015',
+      main: '#FF0000', // Bold red
+      light: '#FF3333',
+      dark: '#CC0000',
     },
     info: {
-      main: '#007AFF',
-      light: '#40A4FF',
-      dark: '#0056CC',
+      main: '#0066CC', // Professional blue
+      light: '#3388DD',
+      dark: '#004499',
     },
     warning: {
-      main: '#FF9F0A', // Apple's orange
-      light: '#FFB340',
-      dark: '#FF8C00',
+      main: '#FF8800', // Orange warning
+      light: '#FFAA33',
+      dark: '#CC6600',
     }
   },
   typography: {
     fontFamily: [
-      '-apple-system',
-      'BlinkMacSystemFont',
-      '"Segoe UI"',
-      'Roboto',
-      '"Helvetica Neue"',
+      'Helvetica Neue', // Swiss style primary font
+      'Helvetica',
       'Arial',
       'sans-serif',
-      '"Apple Color Emoji"',
-      '"Segoe UI Emoji"',
-      '"Segoe UI Symbol"',
     ].join(','),
+    // Swiss style typography hierarchy
     h1: {
-      fontSize: '2rem',
-      fontWeight: 700,
+      fontSize: '3rem',
+      fontWeight: 300, // Light weight for Swiss style
       letterSpacing: '-0.02em',
+      lineHeight: 1.2,
     },
     h2: {
-      fontSize: '1.75rem',
-      fontWeight: 700,
+      fontSize: '2.25rem',
+      fontWeight: 300,
       letterSpacing: '-0.02em',
+      lineHeight: 1.2,
     },
     h3: {
-      fontSize: '1.5rem',
-      fontWeight: 600,
+      fontSize: '1.875rem',
+      fontWeight: 400,
       letterSpacing: '-0.01em',
+      lineHeight: 1.3,
     },
     h4: {
-      fontSize: '1.25rem',
-      fontWeight: 600,
+      fontSize: '1.5rem',
+      fontWeight: 400,
       letterSpacing: '-0.01em',
+      lineHeight: 1.3,
     },
     h5: {
-      fontSize: '1.125rem',
-      fontWeight: 600,
-      letterSpacing: '-0.01em',
+      fontSize: '1.25rem',
+      fontWeight: 500,
+      letterSpacing: 0,
+      lineHeight: 1.4,
     },
     h6: {
-      fontSize: '1rem',
-      fontWeight: 600,
-      letterSpacing: '-0.01em',
+      fontSize: '1.125rem',
+      fontWeight: 500,
+      letterSpacing: 0,
+      lineHeight: 1.4,
     },
     body1: {
       fontSize: '1rem',
+      fontWeight: 400,
       lineHeight: 1.5,
-      letterSpacing: '-0.01em',
+      letterSpacing: 0,
     },
     body2: {
       fontSize: '0.875rem',
+      fontWeight: 400,
       lineHeight: 1.43,
-      letterSpacing: '-0.01em',
+      letterSpacing: 0,
     },
     caption: {
       fontSize: '0.75rem',
+      fontWeight: 400,
       lineHeight: 1.33,
-      letterSpacing: '0em',
+      letterSpacing: '0.03em',
+      textTransform: 'uppercase',
     },
     button: {
-      textTransform: 'none',
-      fontWeight: 600,
-      letterSpacing: '-0.01em',
+      fontWeight: 500,
+      letterSpacing: '0.02em',
+      textTransform: 'uppercase',
     }
   },
   components: {
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
-          textTransform: 'none',
+          borderRadius: 0, // Swiss style: no rounded corners
+          textTransform: 'uppercase',
           fontWeight: 500,
-          padding: '8px 16px',
-          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          letterSpacing: '0.08em',
+          padding: '12px 24px',
+          border: '2px solid transparent',
+          transition: 'all 0.15s ease-in-out',
           '&:hover': {
-            transform: 'translateY(-0.5px)',
+            transform: 'none', // No elevation effects in Swiss style
           },
         },
         contained: {
+          backgroundColor: '#000000',
+          color: '#FFFFFF',
+          border: '2px solid #000000',
           boxShadow: 'none',
           '&:hover': {
-            boxShadow: '0 4px 12px rgba(0, 122, 255, 0.25)',
-            transform: 'translateY(-0.5px)',
-          },
-          '&:active': {
-            transform: 'translateY(0)',
+            backgroundColor: '#FFFFFF',
+            color: '#000000',
+            border: '2px solid #000000',
             boxShadow: 'none',
           },
         },
         outlined: {
-          borderWidth: 1,
-          borderColor: 'rgba(0, 122, 255, 0.2)',
+          borderWidth: 2,
+          borderColor: '#000000',
+          color: '#000000',
           '&:hover': {
-            borderColor: '#007AFF',
-            backgroundColor: 'rgba(0, 122, 255, 0.03)',
-            borderWidth: 1,
+            backgroundColor: '#000000',
+            color: '#FFFFFF',
+            borderColor: '#000000',
           },
         },
         text: {
+          color: '#000000',
           '&:hover': {
-            backgroundColor: 'rgba(0, 122, 255, 0.03)',
+            backgroundColor: 'rgba(0, 0, 0, 0.04)',
           },
         },
       },
@@ -152,25 +163,30 @@ const appleTheme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: 20,
-            backgroundColor: '#F8F8F8',
-            border: 'none',
-            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            borderRadius: 0, // Swiss style: rectangular inputs
+            backgroundColor: '#FFFFFF',
+            border: '2px solid #000000',
             '& fieldset': {
               border: 'none',
             },
             '&:hover': {
-              backgroundColor: '#F2F2F2',
+              backgroundColor: '#F8F8F8',
             },
             '&.Mui-focused': {
               backgroundColor: '#FFFFFF',
-              boxShadow: '0 0 0 1px rgba(0, 122, 255, 0.3)',
+              '& .MuiOutlinedInput-notchedOutline': {
+                border: '2px solid #FF0000', // Red focus border
+              },
             },
           },
           '& .MuiInputLabel-outlined': {
-            color: '#8E8E93',
+            color: '#666666',
+            fontWeight: 500,
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            fontSize: '0.75rem',
             '&.Mui-focused': {
-              color: '#007AFF',
+              color: '#FF0000',
             },
           },
         },
@@ -179,33 +195,37 @@ const appleTheme = createTheme({
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: 20,
+          borderRadius: 0, // Swiss style: rectangular shapes
           boxShadow: 'none',
-          border: '1px solid rgba(0, 0, 0, 0.03)',
+          border: '1px solid #E0E0E0',
           '&.MuiCard-root': {
-            boxShadow: '0 2px 12px rgba(0, 0, 0, 0.04)',
+            border: '2px solid #000000',
           },
         },
         elevation1: {
-          boxShadow: '0 1px 6px rgba(0, 0, 0, 0.04)',
+          boxShadow: 'none',
+          border: '1px solid #E0E0E0',
         },
         elevation2: {
-          boxShadow: '0 2px 12px rgba(0, 0, 0, 0.06)',
+          boxShadow: 'none',
+          border: '2px solid #000000',
         },
         elevation3: {
-          boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+          boxShadow: 'none',
+          border: '2px solid #000000',
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
-          border: '1px solid rgba(0, 0, 0, 0.04)',
-          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          borderRadius: 0, // Swiss style: no rounded corners
+          border: '2px solid #000000',
+          boxShadow: 'none',
+          transition: 'none', // No animations in Swiss style
           '&:hover': {
-            transform: 'translateY(-2px)',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+            transform: 'none',
+            boxShadow: 'none',
           },
         },
       },
@@ -220,12 +240,13 @@ const appleTheme = createTheme({
     MuiListItem: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
-          margin: '1px 8px',
-          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          borderRadius: 0,
+          margin: 0,
+          borderBottom: '1px solid #E0E0E0',
+          transition: 'all 0.15s ease-in-out',
           '&:hover': {
-            backgroundColor: 'rgba(0, 122, 255, 0.03)',
-            transform: 'translateX(2px)',
+            backgroundColor: '#F8F8F8',
+            transform: 'none',
           },
         },
       },
@@ -233,17 +254,25 @@ const appleTheme = createTheme({
     MuiListItemButton: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
-          margin: '1px 8px',
-          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          borderRadius: 0,
+          margin: 0,
+          borderBottom: '1px solid #E0E0E0',
+          transition: 'all 0.15s ease-in-out',
           '&:hover': {
-            backgroundColor: 'rgba(0, 122, 255, 0.03)',
-            transform: 'translateX(2px)',
+            backgroundColor: '#F8F8F8',
+            transform: 'none',
           },
           '&.Mui-selected': {
-            backgroundColor: 'rgba(0, 122, 255, 0.06)',
+            backgroundColor: '#000000',
+            color: '#FFFFFF',
             '&:hover': {
-              backgroundColor: 'rgba(0, 122, 255, 0.08)',
+              backgroundColor: '#333333',
+            },
+            '& .MuiListItemIcon-root': {
+              color: '#FFFFFF',
+            },
+            '& .MuiListItemText-primary': {
+              color: '#FFFFFF',
             },
           },
         },
@@ -252,25 +281,30 @@ const appleTheme = createTheme({
     MuiMenu: {
       styleOverrides: {
         paper: {
-          borderRadius: 12,
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
-          border: '1px solid rgba(0, 0, 0, 0.04)',
-          marginTop: 8,
+          borderRadius: 0, // Swiss style: rectangular shapes
+          boxShadow: 'none',
+          border: '2px solid #000000',
+          marginTop: 0,
         },
         list: {
-          padding: 8,
+          padding: 0,
         },
       },
     },
     MuiMenuItem: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          margin: '2px 0',
-          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          borderRadius: 0, // Swiss style: rectangular
+          margin: 0,
+          padding: '12px 16px',
+          borderBottom: '1px solid #E0E0E0',
+          transition: 'none',
           '&:hover': {
-            backgroundColor: 'rgba(0, 122, 255, 0.04)',
-            transform: 'translateX(2px)',
+            backgroundColor: '#F0F0F0',
+            transform: 'none',
+          },
+          '&:last-child': {
+            borderBottom: 'none',
           },
         },
       },
@@ -278,44 +312,48 @@ const appleTheme = createTheme({
     MuiDialog: {
       styleOverrides: {
         paper: {
-          borderRadius: 24,
-          boxShadow: '0 20px 60px rgba(0, 0, 0, 0.12)',
-          border: '1px solid rgba(0, 0, 0, 0.02)',
+          borderRadius: 0,
+          border: '3px solid #000000',
+          boxShadow: 'none',
         },
       },
     },
     MuiDialogTitle: {
       styleOverrides: {
         root: {
-          padding: '24px 24px 16px',
+          padding: '24px',
           fontSize: '1.25rem',
-          fontWeight: 600,
+          fontWeight: 500,
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+          borderBottom: '2px solid #E0E0E0',
         },
       },
     },
     MuiDialogContent: {
       styleOverrides: {
         root: {
-          padding: '0 24px 16px',
+          padding: '24px',
         },
       },
     },
     MuiDialogActions: {
       styleOverrides: {
         root: {
-          padding: '16px 24px 24px',
-          gap: 12,
+          padding: '24px',
+          borderTop: '2px solid #E0E0E0',
+          gap: 16,
         },
       },
     },
     MuiIconButton: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
-          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          borderRadius: 0, // Swiss style: rectangular buttons
+          transition: 'none',
           '&:hover': {
-            backgroundColor: 'rgba(0, 122, 255, 0.04)',
-            transform: 'scale(1.05)',
+            backgroundColor: '#F0F0F0',
+            transform: 'none',
           },
         },
       },
@@ -323,8 +361,11 @@ const appleTheme = createTheme({
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
+          borderRadius: 0, // Swiss style: rectangular chips
           fontWeight: 500,
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em',
+          border: '1px solid #000000',
         },
       },
     },
@@ -332,8 +373,9 @@ const appleTheme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiSnackbarContent-root': {
-            borderRadius: 12,
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+            borderRadius: 0, // Swiss style: rectangular
+            boxShadow: 'none',
+            border: '2px solid #000000',
           },
         },
       },
@@ -341,7 +383,9 @@ const appleTheme = createTheme({
     MuiDialog: {
         styleOverrides: {
             paper: {
-                borderRadius: 14,
+                borderRadius: 0, // Swiss style: rectangular dialogs
+                border: '3px solid #000000',
+                boxShadow: 'none',
             }
         }
     },
@@ -378,7 +422,7 @@ const appleTheme = createTheme({
     },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 0, // Swiss style: no rounded corners
   },
   spacing: 8,
   transitions: {
@@ -400,4 +444,4 @@ const appleTheme = createTheme({
   },
 });
 
-export default appleTheme;
+export default swissTheme;

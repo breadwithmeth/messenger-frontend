@@ -97,7 +97,7 @@ export default function Templates() {
           variant="contained" 
           onClick={() => handleOpen()}
           sx={{
-            borderRadius: '20px',
+            borderRadius: 0, // Swiss style: rectangular button
             textTransform: 'none',
             boxShadow: 'none',
             '&:hover': {
@@ -115,7 +115,7 @@ export default function Templates() {
       {templates.length > 0 ? (
         <List>
           {templates.map((template) => (
-            <Paper key={template.id} sx={{ mb: 1.5, p: 1, borderRadius: '16px', border: '1px solid', borderColor: 'divider' }} variant="outlined">
+            <Paper key={template.id} sx={{ mb: 1.5, p: 1, borderRadius: 0, border: '2px solid #000000' }} variant="outlined">
               <ListItem
                 secondaryAction={
                   <Box>
@@ -123,10 +123,12 @@ export default function Templates() {
                       size="small" 
                       onClick={() => handleOpen(template)}
                       sx={{
-                        borderRadius: '12px',
-                        textTransform: 'none',
+                        borderRadius: 0, // Swiss style: rectangular button
+                        textTransform: 'uppercase',
+                        fontWeight: 500,
+                        letterSpacing: '0.08em',
                         '&:hover': {
-                          backgroundColor: 'rgba(0, 122, 255, 0.04)',
+                          backgroundColor: '#F0F0F0',
                         }
                       }}
                     >
@@ -138,10 +140,15 @@ export default function Templates() {
                       onClick={() => handleDelete(template.id)} 
                       sx={{ 
                         ml: 1,
-                        borderRadius: '12px',
-                        textTransform: 'none',
+                        borderRadius: 0, // Swiss style: rectangular button
+                        textTransform: 'uppercase',
+                        fontWeight: 500,
+                        letterSpacing: '0.08em',
+                        color: '#FF0000',
+                        border: '1px solid #FF0000',
                         '&:hover': {
-                          backgroundColor: 'rgba(244, 67, 54, 0.04)',
+                          backgroundColor: '#FF0000',
+                          color: '#FFFFFF',
                         }
                       }}
                     >
@@ -180,7 +187,7 @@ export default function Templates() {
         </Typography>
       )}
 
-      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: '20px' } }}>
+      <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm" PaperProps={{ sx: { borderRadius: 0, border: '3px solid #000000' } }}>
         <DialogTitle sx={{ fontWeight: 600 }}>{currentTemplate ? 'Редактировать шаблон' : 'Новый шаблон'}</DialogTitle>
         <form onSubmit={handleSave}>
           <DialogContent>
@@ -215,8 +222,10 @@ export default function Templates() {
             <Button 
               onClick={handleClose}
               sx={{
-                borderRadius: '12px',
-                textTransform: 'none',
+                borderRadius: 0, // Swiss style: rectangular button
+                textTransform: 'uppercase',
+                fontWeight: 500,
+                letterSpacing: '0.08em',
               }}
             >
               Отмена
@@ -225,11 +234,14 @@ export default function Templates() {
               type="submit"
               variant="contained"
               sx={{
-                borderRadius: '12px',
-                textTransform: 'none',
+                borderRadius: 0, // Swiss style: rectangular button
+                textTransform: 'uppercase',
+                fontWeight: 500,
+                letterSpacing: '0.08em',
                 boxShadow: 'none',
                 '&:hover': {
-                  boxShadow: '0 2px 8px rgba(0, 122, 255, 0.2)',
+                  boxShadow: 'none',
+                  backgroundColor: '#333333',
                 }
               }}
             >

@@ -234,7 +234,7 @@ function Accounts() {
               flexDirection: 'column',
               border: '1px solid',
               borderColor: 'divider',
-              borderRadius: 2,
+              borderRadius: 0, // Swiss style: rectangular button
               bgcolor: 'background.paper',
               boxShadow: 1,
               transition: 'box-shadow 0.3s',
