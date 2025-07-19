@@ -180,15 +180,16 @@ export default function Messenger({ onLogout }) {
 
   useEffect(() => {
     let isMounted = true;
+    let recieved_chats = [];
     const fetchChats = async () => {
       try {
         const data = await api.getChats();
-        
+                  recieved_chats = data['chats'] || data; // Обрабатываем данные как массив чатов
+
         // Проверяем новые сообщения для уведомлений
         if (initialLoadComplete) {
           const newCounts = { ...newMessageCounts };
-          
-          data.forEach(chat => {
+          recieved_chats.forEach(chat => {
             const chatId = chat.id;
             const lastMessage = chat.lastMessage;
             
@@ -225,7 +226,7 @@ export default function Messenger({ onLogout }) {
         
         // Обновляем счетчики сообщений
         const updatedMessageCounts = {};
-        data.forEach(chat => {
+        recieved_chats.forEach(chat => {
           if (chat.lastMessage) {
             updatedMessageCounts[chat.id] = chat.lastMessage.id;
           }
@@ -255,7 +256,9 @@ export default function Messenger({ onLogout }) {
             setInitialLoadComplete(true);
           }
         }
-      } catch {
+      } catch (error) {
+        console.error("Ошибка при загрузке чатов:", error);
+        
         if (isMounted) {
           console.error('Не удалось загрузить чаты');
         }
