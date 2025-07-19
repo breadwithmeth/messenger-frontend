@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback, useDeferredValue } from "react";
 import { 
   Box, 
   TextField, 
@@ -18,58 +18,69 @@ import {
 } from "@mui/material";
 import { Send as SendIcon, AttachFile as AttachFileIcon } from '@mui/icons-material';
 
-export default function ChatInput({ value, onChange, onSend, disabled, onRewrite, isRewriting, onMediaSend }) {
+// Константы для ограничений загрузки файлов
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+
+// Максимально оптимизированный компонент для устранения лага ввода
+const ChatInput = React.memo(function ChatInput({ value, onChange, onSend, disabled, onRewrite, isRewriting, onMediaSend }) {
   const [templates, setTemplates] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const fileInputRef = useRef(null);
 
-  // State for the rewrite options dialog
+  // Минимальный state для диалога
   const [dialogOpen, setDialogOpen] = useState(false);
   const [textToRewrite, setTextToRewrite] = useState(null);
   const [tone, setTone] = useState('professional');
   const [style, setStyle] = useState('friendly');
   const [length, setLength] = useState('same');
+  
+  // Используем useDeferredValue для изоляции input от других обновлений
+  const deferredValue = React.useDeferredValue(value);
 
-  useEffect(() => {
-    const storedTemplates = JSON.parse(localStorage.getItem('messageTemplates') || '[]');
-    setTemplates(storedTemplates);
+  // Оптимизированная загрузка шаблонов только при открытии меню
+  const loadTemplates = useCallback(() => {
+    try {
+      const storedTemplates = JSON.parse(localStorage.getItem('messageTemplates') || '[]');
+      setTemplates(storedTemplates);
+    } catch (error) {
+      console.error('Error loading templates:', error);
+      setTemplates([]);
+    }
   }, []);
 
-  const handleClick = (event) => {
-    // Обновляем шаблоны перед открытием меню
-    const storedTemplates = JSON.parse(localStorage.getItem('messageTemplates') || '[]');
-    setTemplates(storedTemplates);
+  // Максимально оптимизированные обработчики с useCallback
+  const handleClick = useCallback((event) => {
+    loadTemplates(); // Загружаем шаблоны только при открытии
     setAnchorEl(event.currentTarget);
-  };
+  }, [loadTemplates]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     setAnchorEl(null);
-  };
+  }, []);
 
-  const handleDialogClose = () => {
+  const handleDialogClose = useCallback(() => {
     setDialogOpen(false);
     setTextToRewrite(null);
-    // Сбрасываем значения при закрытии
     setTone('professional');
     setStyle('friendly');
     setLength('same');
-  };
+  }, []);
 
-  const handleSelectTemplate = (template) => {
+  const handleSelectTemplate = useCallback((template) => {
     setTextToRewrite(template.text);
     setDialogOpen(true);
     handleClose();
-  };
+  }, [handleClose]);
 
-  const handleImproveMessage = () => {
+  const handleImproveMessage = useCallback(() => {
     if (!value.trim()) return;
     setTextToRewrite(value);
     setDialogOpen(true);
-  };
+  }, [value]);
 
-  const handleConfirmRewrite = () => {
+  const handleConfirmRewrite = useCallback(() => {
     if (!textToRewrite) return;
     if (onRewrite) {
       onRewrite({
@@ -80,35 +91,27 @@ export default function ChatInput({ value, onChange, onSend, disabled, onRewrite
       });
     }
     handleDialogClose();
-  };
-  
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
-      if (!disabled && value.trim()) {
-        onSend(e);
-      }
-    }
-  };
+  }, [textToRewrite, onRewrite, tone, style, length, handleDialogClose]);
 
-  const handleSubmit = (e) => {
+  // Критично оптимизированный обработчик отправки
+  const handleSubmit = useCallback((e) => {
     e.preventDefault();
-    if (value.trim() && !disabled) {
+    if (deferredValue.trim() && !disabled) {
       onSend(e);
     }
-  };
+  }, [deferredValue, disabled, onSend]);
 
-  const handleMediaButtonClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileSelect = async (event) => {
+  const handleFileSelect = useCallback(async (event) => {
     const file = event.target.files[0];
     if (!file || !onMediaSend) return;
 
+    if (file.size > MAX_FILE_SIZE) {
+      alert(`Файл слишком большой. Максимальный размер: ${Math.round(MAX_FILE_SIZE / 1024 / 1024)}MB`);
+      return;
+    }
+
     setIsUploadingMedia(true);
     try {
-      // Определяем тип медиафайла
       let mediaType = 'document';
       if (file.type.startsWith('image/')) {
         mediaType = 'image';
@@ -121,14 +124,14 @@ export default function ChatInput({ value, onChange, onSend, disabled, onRewrite
       await onMediaSend(file, mediaType);
     } catch (error) {
       console.error('Ошибка при отправке медиафайла:', error);
+      alert('Ошибка при отправке файла');
     } finally {
       setIsUploadingMedia(false);
-      // Очищаем input для возможности повторной отправки того же файла
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+      if (event.target) {
+        event.target.value = '';
       }
     }
-  };
+  }, [onMediaSend]);
 
   return (
     <>
@@ -138,33 +141,19 @@ export default function ChatInput({ value, onChange, onSend, disabled, onRewrite
         sx={{
           display: 'flex',
           alignItems: 'center',
-          p: 3,
-          borderTop: '2px solid',
-          borderColor: 'primary.main',
-          bgcolor: 'background.paper',
-          gap: 2,
+          p: 2,
+          gap: 1.5,
         }}
       >
-        {/* Template Button */}
         <Button 
           onClick={handleClick} 
           disabled={disabled} 
           variant="outlined" 
-          color="primary" 
-          sx={{ 
-            p: '12px 16px', 
-            minWidth: 'auto',
-            borderRadius: 0,
-            textTransform: 'uppercase',
-            fontWeight: 500,
-            letterSpacing: '0.08em',
-            fontSize: '0.75rem',
-          }}
+          size="small"
         >
           Шаблон
         </Button>
         
-        {/* Templates Menu */}
         <Menu
           anchorEl={anchorEl}
           open={open}
@@ -181,71 +170,53 @@ export default function ChatInput({ value, onChange, onSend, disabled, onRewrite
           )}
         </Menu>
 
-        {/* Message Input */}
         <TextField
           fullWidth
           multiline
           maxRows={4}
           value={value}
           onChange={onChange}
-          onKeyDown={handleKeyDown}
-          placeholder={isRewriting ? "УЛУЧШАЕМ ТЕКСТ..." : "ВВЕДИТЕ СООБЩЕНИЕ..."}
+          placeholder="Введите сообщение..."
           disabled={disabled}
-          autoFocus
           variant="outlined"
-          size="medium"
-          sx={{ 
-            mr: 1,
-            ml: 1,
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 0, // Swiss style: rectangular
-              backgroundColor: '#FFFFFF',
-              border: '2px solid #000000',
-              '& fieldset': {
-                border: 'none',
-              },
-              '&:hover': {
-                backgroundColor: '#F8F8F8',
-              },
-              '&.Mui-focused': {
-                backgroundColor: '#FFFFFF',
-                borderColor: '#FF0000', // Swiss red focus
-                '& .MuiOutlinedInput-notchedOutline': {
-                  border: '2px solid #FF0000',
-                },
-              },
+          size="small"
+          inputProps={{
+            style: {
+              resize: 'none' // Отключаем ресайзинг для стабильности
             }
           }}
-          InputProps={{
-            endAdornment: isRewriting && <CircularProgress size={20} sx={{ mr: 1 }} color="secondary" />
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 0,
+              transition: 'none', // Убираем все анимации
+              '& fieldset': {
+                transition: 'none'
+              },
+              '&:hover fieldset': {
+                transition: 'none'
+              },
+              '&.Mui-focused fieldset': {
+                transition: 'none'
+              }
+            },
+            '& .MuiInputBase-input': {
+              transition: 'none', // Убираем анимации у инпута
+              fontSize: '16px', // Предотвращаем zoom на мобильных
+            }
           }}
         />
 
-        {/* Improve Button */}
         {onRewrite && (
           <Button 
             onClick={handleImproveMessage} 
             disabled={disabled || !value.trim()} 
             variant="outlined" 
-            color="primary" 
-            sx={{ 
-              p: '12px 16px', 
-              minWidth: 'auto',
-              borderRadius: 0, // Swiss style
-              textTransform: 'uppercase',
-              fontWeight: 500,
-              letterSpacing: '0.08em',
-              fontSize: '0.75rem',
-              '&:hover': {
-                backgroundColor: '#F0F0F0',
-              }
-            }}
+            size="small"
           >
             Улучшить
           </Button>
         )}
 
-        {/* Media Upload Button */}
         {onMediaSend && (
           <>
             <input
@@ -253,72 +224,34 @@ export default function ChatInput({ value, onChange, onSend, disabled, onRewrite
               ref={fileInputRef}
               onChange={handleFileSelect}
               style={{ display: 'none' }}
-              accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+              accept=".jpg,.jpeg,.png,.gif,.webp,.svg,.mp4,.avi,.mov,.wmv,.webm,.mp3,.wav,.ogg,.m4a,.aac,.pdf,.txt,.doc,.docx,.xls,.xlsx"
             />
             <IconButton
-              onClick={handleMediaButtonClick}
+              onClick={() => fileInputRef.current?.click()}
               disabled={disabled || isUploadingMedia}
-              color="primary"
-              sx={{
-                border: '2px solid',
-                borderColor: 'primary.main',
-                borderRadius: 0,
-                p: '10px',
-                '&:hover': {
-                  backgroundColor: '#F0F0F0',
-                },
-                '&:disabled': {
-                  borderColor: '#E0E0E0',
-                  color: '#CCCCCC',
-                }
-              }}
+              size="small"
             >
               {isUploadingMedia ? (
-                <CircularProgress size={20} />
+                <CircularProgress size={16} />
               ) : (
-                <AttachFileIcon />
+                <AttachFileIcon fontSize="small" />
               )}
             </IconButton>
           </>
         )}
 
-        {/* Send Button */}
         <Button
           type="submit"
           disabled={disabled || !value.trim()}
-          color="primary"
           variant="contained"
-          sx={{ 
-            p: '12px 24px', 
-            borderRadius: 0, // Swiss style: rectangular
-            textTransform: 'uppercase',
-            fontWeight: 500,
-            letterSpacing: '0.08em',
-            fontSize: '0.875rem',
-            boxShadow: 'none',
-            minWidth: '120px',
-            border: '2px solid #000000',
-            backgroundColor: '#000000',
-            color: '#FFFFFF',
-            '&:hover': {
-              backgroundColor: '#FFFFFF',
-              color: '#000000',
-              boxShadow: 'none',
-            },
-            '&:disabled': {
-              backgroundColor: '#E0E0E0',
-              color: '#CCCCCC',
-              border: '2px solid #E0E0E0',
-            }
-          }}
+          size="small"
         >
           Отправить
         </Button>
       </Box>
 
-      {/* Rewrite Dialog */}
       <Dialog open={dialogOpen} onClose={handleDialogClose} fullWidth maxWidth="sm">
-        <DialogTitle sx={{ fontFamily: 'Helvetica Neue, Arial, sans-serif', fontWeight: 'bold' }}>
+        <DialogTitle>
           Улучшить текст
         </DialogTitle>
         <DialogContent>
@@ -328,10 +261,7 @@ export default function ChatInput({ value, onChange, onSend, disabled, onRewrite
             sx={{ 
               mt: 2, 
               p: 2, 
-              bgcolor: 'action.hover', 
-              borderRadius: 0, 
-              border: '2px dashed #000000', 
-              borderColor: '#000000' 
+              bgcolor: 'action.hover',
             }}
           >
             {textToRewrite}
@@ -379,18 +309,16 @@ export default function ChatInput({ value, onChange, onSend, disabled, onRewrite
             </Select>
           </FormControl>
         </DialogContent>
-        <DialogActions sx={{ p: '16px 24px' }}>
+        <DialogActions>
           <Button 
             onClick={handleDialogClose} 
             variant="outlined"
-            sx={{ borderRadius: 0 }}
           >
             Отмена
           </Button>
           <Button 
             onClick={handleConfirmRewrite} 
             variant="contained"
-            sx={{ borderRadius: 0 }}
           >
             Улучшить
           </Button>
@@ -398,4 +326,6 @@ export default function ChatInput({ value, onChange, onSend, disabled, onRewrite
       </Dialog>
     </>
   );
-}
+});
+
+export default ChatInput;

@@ -8,8 +8,37 @@ html, body, #root {
   background: #FFFFFF;
   color: #000000;
   font-feature-settings: 'kern' 1, 'liga' 1;
-  font-size: 16px; /* Базовый размер шрифта для лучшей читаемости */
-  line-height: 1.6; /* Увеличенный межстрочный интервал */
+  font-size: 16px;
+  line-height: 1.6;
+  
+  /* Оптимизации для устранения лага ввода */
+  scroll-behavior: auto; /* Убираем плавную прокрутку для производительности */
+  
+  /* Улучшенная производительность рендеринга */
+  * {
+    box-sizing: border-box;
+    /* Отключаем ненужные анимации для инпутов */
+    will-change: auto;
+  }
+  
+  /* Оптимизации для textarea и input */
+  textarea, input[type="text"], .MuiInputBase-input {
+    transform: translateZ(0); /* Hardware acceleration */
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    /* Отключаем все анимации и переходы для инпутов */
+    transition: none !important;
+    animation: none !important;
+    -webkit-animation: none !important;
+  }
+  
+  /* Отключаем анимации Material UI для лучшей производительности */
+  .MuiOutlinedInput-root fieldset,
+  .MuiOutlinedInput-root:hover fieldset,
+  .MuiOutlinedInput-root.Mui-focused fieldset {
+    transition: none !important;
+    animation: none !important;
+  }
 }
 
 /* Swiss Style sidebar */
@@ -47,20 +76,19 @@ html, body, #root {
   padding: 0;
   cursor: pointer;
   background: transparent;
-  transition: all 0.15s ease-in-out;
   margin: 0;
   border-bottom: 1px solid #E0E0E0;
 }
 
 .sidebar-list li:hover {
   background: #F8F8F8;
-  transform: none;
+  border-left: 4px solid #2196F3;
 }
 
 .sidebar-list li.selected {
   background: #000000;
   color: #FFFFFF;
-  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
 .sidebar-list li.selected:hover {
@@ -153,14 +181,12 @@ html, body, #root {
   word-break: break-word;
   position: relative;
   color: #000000;
-  transition: none;
   letter-spacing: 0;
   line-height: 1.5;
 }
 
 .chat-bubble:hover {
-  transform: none;
-  box-shadow: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .chat-bubble.me {
@@ -171,7 +197,7 @@ html, body, #root {
 }
 
 .chat-bubble.me:hover {
-  box-shadow: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 /* Стили для последнего сообщения в группе */
@@ -232,7 +258,6 @@ html, body, #root {
   outline: none;
   color: #000000;
   box-shadow: none;
-  transition: all 0.15s ease-in-out;
   letter-spacing: 0;
   line-height: 1.5;
 }
@@ -254,19 +279,16 @@ html, body, #root {
   font-weight: 500;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  transition: all 0.15s ease-in-out;
   box-shadow: none;
 }
 
 .chat-send-btn:hover {
   background: #FFFFFF;
   color: #000000;
-  transform: none;
   box-shadow: none;
 }
 
 .chat-send-btn:active {
-  transform: none;
   box-shadow: none;
 }
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useMemo, useCallback, useDeferredValue, useTransition } from "react";
 import { useTheme } from "@mui/material/styles";
 import {
   Box,
@@ -13,57 +13,23 @@ import ChatInfoSidebar from "../components/ChatInfoSidebar";
 import ChatBubble from "../components/ChatBubble"; // Импортируем правильный компонент
 import MessageGroupHeader from "../components/MessageGroupHeader";
 import TopBar from "../components/TopBar";
+import { useOptimizedInput } from "../hooks/useOptimizedInput";
 import ChatInput from "../components/ChatInput";
+import { areMessagesEqual } from "../utils/messageComparison";
 
 
 function ChatMessages({ messages, userId, loading, isFirstLoad, onFirstLoadComplete }) {
   const theme = useTheme();
   const containerRef = useRef(null);
-
-  useEffect(() => {
-    // Прокручиваем вниз только при первой загрузке сообщений
-    if (containerRef.current && isFirstLoad && messages.length > 0) {
-      containerRef.current.scrollTo({
-        top: containerRef.current.scrollHeight,
-        behavior: 'smooth'
-      });
-      onFirstLoadComplete();
-    }
-  }, [messages, isFirstLoad, onFirstLoadComplete]);
-
-  const scrollToBottom = () => {
-    if (containerRef.current) {
-      containerRef.current.scrollTop = containerRef.current.scrollHeight;
-    }
-  };
-
-  // Убираем автоматическое прокручивание при каждом обновлении
-  // useEffect(() => {
-  //   scrollToBottom();
-  // }, [messages]);
-
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          bgcolor: 'transparent'
-        }}
-      >
-        <Fade in={loading} style={{ transitionDelay: '500ms' }}>
-          <CircularProgress />
-        </Fade>
-      </Box>
-    );
-  }
-
-  const findQuotedMessageContent = (quotedId) => {
-    if (!quotedId || !messages) return null;
+  
+  // Используем useDeferredValue для плавного обновления
+  const deferredMessages = useDeferredValue(messages);
+  
+  // Мемоизируем тяжелую функцию поиска
+  const findQuotedMessageContent = useCallback((quotedId) => {
+    if (!quotedId || !deferredMessages) return null;
     // Ищем сообщение, чей whatsappMessageId совпадает с quotedId
-    const quotedMsg = messages.find(m => m.whatsappMessageId === quotedId);
+    const quotedMsg = deferredMessages.find(m => m.whatsappMessageId === quotedId);
     if (!quotedMsg) return null;
 
     if (quotedMsg.content) {
@@ -76,59 +42,115 @@ function ChatMessages({ messages, userId, loading, isFirstLoad, onFirstLoadCompl
       return `📄 ${quotedMsg.filename || 'Файл'}`;
     }
     return null;
-  };
+  }, [deferredMessages]);
 
-  const groupByDate = (msgs) => {
-    const groups = {};
-    msgs.forEach(msg => {
-      if (!msg.timestamp) return;
-      
-      const messageDate = new Date(msg.timestamp);
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-      
-      let dateKey;
-      if (messageDate.toDateString() === today.toDateString()) {
-        dateKey = 'Сегодня';
-      } else if (messageDate.toDateString() === yesterday.toDateString()) {
-        dateKey = 'Вчера';
-      } else if (messageDate.getFullYear() === today.getFullYear()) {
-        // Этот год - показываем день и месяц
-        dateKey = messageDate.toLocaleDateString('ru-RU', { 
-          day: 'numeric', 
-          month: 'long' 
-        });
-      } else {
-        // Другой год - показываем полную дату
-        dateKey = messageDate.toLocaleDateString('ru-RU', { 
-          day: 'numeric', 
-          month: 'long', 
-          year: 'numeric' 
-        });
-      }
-      
-      if (!groups[dateKey]) groups[dateKey] = [];
-      groups[dateKey].push(msg);
-    });
-    return groups;
-  };
-  const grouped = groupByDate(messages);
-  const dates = Object.keys(grouped).sort((a, b) => {
-    // Специальная сортировка для текстовых дат
-    const getDateValue = (dateStr) => {
-      if (dateStr === 'Сегодня') return new Date().getTime();
-      if (dateStr === 'Вчера') {
-        const yesterday = new Date();
+  // Мемоизируем группировку сообщений по датам
+  const { grouped, dates } = useMemo(() => {
+    const groupByDate = (msgs) => {
+      const groups = {};
+      msgs.forEach(msg => {
+        if (!msg.timestamp) return;
+        
+        const messageDate = new Date(msg.timestamp);
+        const today = new Date();
+        const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
-        return yesterday.getTime();
-      }
-      // Для остальных дат пытаемся найти первое сообщение этой группы
-      const firstMsg = grouped[dateStr]?.[0];
-      return firstMsg?.timestamp ? new Date(firstMsg.timestamp).getTime() : 0;
+        
+        let dateKey;
+        if (messageDate.toDateString() === today.toDateString()) {
+          dateKey = 'Сегодня';
+        } else if (messageDate.toDateString() === yesterday.toDateString()) {
+          dateKey = 'Вчера';
+        } else if (messageDate.getFullYear() === today.getFullYear()) {
+          // Этот год - показываем день и месяц
+          dateKey = messageDate.toLocaleDateString('ru-RU', { 
+            day: 'numeric', 
+            month: 'long' 
+          });
+        } else {
+          // Другой год - показываем полную дату
+          dateKey = messageDate.toLocaleDateString('ru-RU', { 
+            day: 'numeric', 
+            month: 'long', 
+            year: 'numeric' 
+          });
+        }
+        
+        if (!groups[dateKey]) groups[dateKey] = [];
+        groups[dateKey].push(msg);
+      });
+      return groups;
     };
-    return getDateValue(a) - getDateValue(b);
-  });
+    
+    const grouped = groupByDate(deferredMessages);
+    const dates = Object.keys(grouped).sort((a, b) => {
+      // Специальная сортировка для текстовых дат
+      const getDateValue = (dateStr) => {
+        if (dateStr === 'Сегодня') return new Date().getTime();
+        if (dateStr === 'Вчера') {
+          const yesterday = new Date();
+          yesterday.setDate(yesterday.getDate() - 1);
+          return yesterday.getTime();
+        }
+        // Для остальных дат пытаемся найти первое сообщение этой группы
+        const firstMsg = grouped[dateStr]?.[0];
+        return firstMsg?.timestamp ? new Date(firstMsg.timestamp).getTime() : 0;
+      };
+      return getDateValue(a) - getDateValue(b);
+    });
+    
+    return { grouped, dates };
+  }, [deferredMessages]);
+  
+  useEffect(() => {
+    // Прокручиваем вниз только при первой загрузке сообщений
+    if (containerRef.current && isFirstLoad && deferredMessages.length > 0) {
+      // Добавляем небольшую задержку для плавности
+      setTimeout(() => {
+        if (containerRef.current) {
+          containerRef.current.scrollTo({
+            top: containerRef.current.scrollHeight,
+            behavior: 'smooth'
+          });
+          onFirstLoadComplete();
+        }
+      }, 100);
+    }
+  }, [deferredMessages, isFirstLoad, onFirstLoadComplete]);
+
+  if (loading) {
+    return (
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          bgcolor: 'transparent'
+        }}
+      >
+        <Fade in={loading} style={{ transitionDelay: '300ms' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            gap: 2 
+          }}>
+            <CircularProgress sx={{ color: '#2196F3' }} />
+            <Typography 
+              variant="body2" 
+              sx={{ 
+                color: '#757575',
+                fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'
+              }}
+            >
+              Загрузка сообщений...
+            </Typography>
+          </Box>
+        </Fade>
+      </Box>
+    );
+  }
   return (
     <Box
       ref={containerRef}
@@ -162,7 +184,16 @@ function ChatMessages({ messages, userId, loading, isFirstLoad, onFirstLoadCompl
               border: '1px solid #D0D0D0',
               maxWidth: 250,
               mx: 'auto',
-              fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'
+              fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+              opacity: 0,
+              transform: 'translateY(20px)',
+              animation: 'fadeInUp 0.6s ease-out forwards',
+              '@keyframes fadeInUp': {
+                'to': {
+                  opacity: 1,
+                  transform: 'translateY(0)',
+                },
+              },
             }}
           >
             {date}
@@ -207,24 +238,31 @@ function ChatMessages({ messages, userId, loading, isFirstLoad, onFirstLoadCompl
   );
 }
 
-
+const MemoizedChatMessages = React.memo(ChatMessages, (prevProps, nextProps) => {
+  // Быстрое сравнение основных пропсов
+  if (prevProps.loading !== nextProps.loading) return false;
+  if (prevProps.userId !== nextProps.userId) return false;
+  if (prevProps.isFirstLoad !== nextProps.isFirstLoad) return false;
+  
+  // Используем утилиту для сравнения сообщений
+  return areMessagesEqual(prevProps.messages, nextProps.messages);
+});
 
 export default function Messenger({ onLogout }) {
   const theme = useTheme();
   const [chats, setChats] = useState([]);
   const [selectedChat, setSelectedChat] = useState(null);
   const [messages, setMessages] = useState([]);
-  const [message, setMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isRewriting, setIsRewriting] = useState(false);
   const [phoneInfo, setPhoneInfo] = useState(null);
   const [phoneInfoLoading, setPhoneInfoLoading] = useState(false);
-  const [suggestedReplies, setSuggestedReplies] = useState([]);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [isFirstMessageLoad, setIsFirstMessageLoad] = useState(true);
   const [currentUser, setCurrentUser] = useState(null);
-  const lastProcessedMessageIdRef = React.useRef(null);
+  
+  // Добавляем useTransition для плавных обновлений
+  const [isPending, startTransition] = useTransition();
 
   // Получаем информацию о текущем пользователе
   useEffect(() => {
@@ -277,8 +315,8 @@ export default function Messenger({ onLogout }) {
       }
     };
     fetchChats();
-    // Обновляем чаты каждые 2 секунды
-    const interval = setInterval(fetchChats, 2000);
+    // Обновляем чаты каждые 10 секунд для снижения нагрузки
+    const interval = setInterval(fetchChats, 10000);
     return () => { isMounted = false; clearInterval(interval); };
   }, [selectedChat]);
 
@@ -320,10 +358,6 @@ export default function Messenger({ onLogout }) {
   useEffect(() => {
     if (!selectedChat) return;
     let isMounted = true;
-    
-    // Сбрасываем ID обработанного сообщения при смене чата
-    lastProcessedMessageIdRef.current = null;
-    setSuggestedReplies([]);
 
     // Показываем загрузку только при первоначальном выборе чата
     setLoading(true);
@@ -334,8 +368,21 @@ export default function Messenger({ onLogout }) {
         console.log('Fetched messages:', data);
         let msgs = Array.isArray(data) ? data : data.messages;
         msgs = msgs.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+        
         if (isMounted) {
-          setMessages(msgs);
+          // Оптимизация: обновляем состояние только если сообщения действительно изменились
+          // Используем startTransition для плавных обновлений
+          startTransition(() => {
+            setMessages(prevMessages => {
+              // Используем утилиту для сравнения сообщений
+              if (areMessagesEqual(prevMessages, msgs)) {
+                return prevMessages; // Возвращаем старое состояние, не вызываем перерендер
+              }
+              
+              return msgs; // Обновляем состояние
+            });
+          });
+          
           // Убираем индикатор загрузки только после первоначальной загрузки
           if (isInitial) {
             setLoading(false);
@@ -358,10 +405,10 @@ export default function Messenger({ onLogout }) {
     // Первоначальная загрузка с индикатором
     fetchMessages(true);
     
-    // Периодическое обновление без индикатора загрузки (каждые 2 секунды)
+    // Периодическое обновление без индикатора загрузки (каждые 10 секунд для снижения нагрузки)
     const interval = setInterval(() => {
       fetchMessages(false);
-    }, 2000);
+    }, 10000);
     
     return () => { 
       isMounted = false; 
@@ -369,52 +416,22 @@ export default function Messenger({ onLogout }) {
     };
   }, [selectedChat]);
 
-  // Генерация подсказок при обновлении сообщений
-  useEffect(() => {
-    if (!messages || messages.length === 0) {
-      setSuggestedReplies([]);
-      return;
-    }
+  // Оптимизированная обработка ввода сообщений
+  const {
+    value: message,
+    deferredValue: deferredMessage,
+    isPending: isInputPending,
+    handleChange: handleInputChange,
+    setValue: setMessage
+  } = useOptimizedInput('', {
+    debounceDelay: 150,
+    enableTransition: true
+  });
 
-    const lastMessage = messages[messages.length - 1];
-    
-    // Генерируем подсказки только если:
-    // 1. Последнее сообщение существует
-    // 2. Оно не от нас
-    // 3. Мы еще не обрабатывали это сообщение
-    if (lastMessage && !lastMessage.fromMe && lastMessage.id !== lastProcessedMessageIdRef.current) {
-      const generateReplies = async () => {
-        // Запоминаем ID сообщения, которое мы *начинаем* обрабатывать
-        const messageIdToProcess = lastMessage.id;
-        lastProcessedMessageIdRef.current = messageIdToProcess;
-        setLoadingSuggestions(true);
-        
-        try {
-          const context = localStorage.getItem('aiContext') || '';
-          // Берем последние 5 сообщений для контекста
-          const history = messages.slice(-5);
-          const replies = await api.suggestRepliesWithGemini(history, context);
-
-          // Проверяем, что мы все еще в том же чате и обрабатываем то же сообщение
-          if (lastProcessedMessageIdRef.current === messageIdToProcess) {
-            setSuggestedReplies(replies);
-          }
-        } catch (error) {
-          console.error("Ошибка при генерации подсказок:", error);
-        } finally {
-          // Проверяем, что мы все еще в том же чате и обрабатываем то же сообщение
-          if (lastProcessedMessageIdRef.current === messageIdToProcess) {
-            setLoadingSuggestions(false);
-          }
-        }
-      };
-      generateReplies();
-    } else if (lastMessage && lastMessage.fromMe) {
-      // Если последнее сообщение от нас, очищаем подсказки
-      setSuggestedReplies([]);
-    }
+  // Мемоизированная фильтрация и поиск (если нужно в будущем)
+  const memoizedMessages = useMemo(() => {
+    return messages; // Простое мемоизирование для стабильности ссылок
   }, [messages]);
-
 
   // Загрузка информации о телефоне при выборе чата
   useEffect(() => {
@@ -471,6 +488,8 @@ export default function Messenger({ onLogout }) {
         return;
       }
       const rewrittenText = await api.rewriteWithGemini(text, tone, style, length);
+      
+      // Используем setValue из хука для обновления
       setMessage(rewrittenText);
       alert('Текст успешно улучшен!');
     } catch (error) {
@@ -515,11 +534,13 @@ export default function Messenger({ onLogout }) {
         text: message 
       });
       
-      // Обновление UI
-      setMessages(prev => [...prev, sentMessage]);
+      // Обновление UI с использованием transition для плавности
+      startTransition(() => {
+        setMessages(prev => [...prev, sentMessage]);
+      });
+      
+      // Очищаем input через хук
       setMessage('');
-      setSuggestedReplies([]); // Очищаем подсказки после отправки
-      lastProcessedMessageIdRef.current = null; // Сбрасываем ID, чтобы не блокировать новые подсказки
 
       // Отмечаем сообщения как прочитанные после отправки
       if (selectedChat.id) {
@@ -529,13 +550,15 @@ export default function Messenger({ onLogout }) {
       }
 
       // Обновляем список чатов, чтобы актуализировать последнее сообщение
-       const updatedChats = await api.getMyAssignedChats();
-       const sorted = [...(updatedChats.chats || [])].sort((a, b) => {
-         const getTime = chat => chat.lastMessage?.timestamp || chat.lastMessageAt || chat.createdAt || 0;
-         return new Date(getTime(b)) - new Date(getTime(a));
-       });
-       setChats(sorted);
-
+      const updatedChats = await api.getMyAssignedChats();
+      const sorted = [...(updatedChats.chats || [])].sort((a, b) => {
+        const getTime = chat => chat.lastMessage?.timestamp || chat.lastMessageAt || chat.createdAt || 0;
+        return new Date(getTime(b)) - new Date(getTime(a));
+      });
+      
+      startTransition(() => {
+        setChats(sorted);
+      });
 
     } catch (error) {
       console.error("Ошибка при отправке сообщения:", error);
@@ -602,6 +625,11 @@ export default function Messenger({ onLogout }) {
     return chat.assignedUser.id === user.id;
   };
 
+  // Мемоизированные обработчики для оптимизации производительности
+  const handleFirstLoadComplete = useCallback(() => {
+    setIsFirstMessageLoad(false);
+  }, []);
+
   const handleSelectChat = (chat) => {
     setSelectedChat(chat);
     setIsFirstMessageLoad(true); // Сбрасываем флаг при выборе нового чата
@@ -631,71 +659,16 @@ export default function Messenger({ onLogout }) {
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
             {selectedChat ? (
               <>
-                <ChatMessages 
+                <MemoizedChatMessages 
                   messages={messages} 
                   userId={null} 
                   loading={loading} 
                   isFirstLoad={isFirstMessageLoad}
-                  onFirstLoadComplete={() => setIsFirstMessageLoad(false)}
+                  onFirstLoadComplete={handleFirstLoadComplete}
                 />
-                {loadingSuggestions && (
-                  <Box sx={{ px: 3, py: 2, display: 'flex', alignItems: 'center', gap: 1.5, justifyContent: 'center' }}>
-                    <CircularProgress size={20} sx={{ color: '#2196F3' }} />
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        color: '#424242',
-                        fontSize: '0.9rem',
-                        fontWeight: 500,
-                        fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'
-                      }}
-                    >
-                      Генерируем подсказки...
-                    </Typography>
-                  </Box>
-                )}
-                {suggestedReplies.length > 0 && (
-                  <Box sx={{ 
-                    p: 1.5, 
-                    display: 'flex', 
-                    gap: 1, 
-                    flexWrap: 'wrap', 
-                    justifyContent: 'center', 
-                    borderTop: '1px solid', 
-                    borderColor: 'divider',
-                    backgroundColor: '#FAFAFA'
-                  }}>
-                    {suggestedReplies.map((reply, index) => (
-                      <Button 
-                        key={`reply-${index}-${reply.slice(0, 10)}`} 
-                        variant="outlined" 
-                        size="small" 
-                        onClick={() => setMessage(reply)}
-                        sx={{
-                          borderRadius: 0, // Swiss style: rectangular
-                          textTransform: 'none',
-                          fontSize: '0.9rem',
-                          fontWeight: 500,
-                          border: '2px solid #2196F3',
-                          color: '#1976D2',
-                          backgroundColor: '#FFFFFF',
-                          padding: '10px 20px',
-                          fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-                          '&:hover': {
-                            backgroundColor: '#E3F2FD',
-                            borderColor: '#1976D2',
-                            color: '#0D47A1',
-                          }
-                        }}
-                      >
-                        {reply}
-                      </Button>
-                    ))}
-                  </Box>
-                )}
                 <ChatInput
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={handleInputChange}
                   onSend={handleSendMessage}
                   disabled={sending || isRewriting || !canWriteToChat(selectedChat, currentUser)}
                   onRewrite={handleRewrite}

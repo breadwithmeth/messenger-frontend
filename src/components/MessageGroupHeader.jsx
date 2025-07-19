@@ -2,7 +2,7 @@ import React from 'react';
 import { Box, Typography } from '@mui/material';
 import UserAvatar from './UserAvatar';
 
-export default function MessageGroupHeader({ senderUser, timestamp }) {
+function MessageGroupHeader({ senderUser, timestamp }) {
   if (!senderUser) return null;
 
   const displayName = senderUser.name || senderUser.email.split('@')[0];
@@ -19,7 +19,7 @@ export default function MessageGroupHeader({ senderUser, timestamp }) {
         gap: 1, 
         mb: 0.5,
         alignSelf: 'flex-end',
-        mr: 1
+        mr: 1,
       }}
     >
       <UserAvatar user={senderUser} size={20} />
@@ -48,3 +48,5 @@ export default function MessageGroupHeader({ senderUser, timestamp }) {
     </Box>
   );
 }
+
+export default React.memo(MessageGroupHeader);

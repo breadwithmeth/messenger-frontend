@@ -1,9 +1,10 @@
 import React from "react";
 import { Box, Typography, Menu, MenuItem } from "@mui/material";
+import { areMessagesPropsEqual } from "../utils/messageComparison";
 
 const API_URL_ROOT = (import.meta.env.VITE_SOCKET_URL || 'http://localhost:4000/').replace(/\/$/, '');
 
-const MediaContent = ({ message }) => {
+const MediaContent = React.memo(({ message }) => {
   if (!message.mediaUrl || !message.mimeType) {
     return null;
   }
@@ -62,17 +63,33 @@ const MediaContent = ({ message }) => {
   // Fallback for other file types
   return (
     <Box sx={{ mt: message.content ? 1 : 0 }}>
-      <a href={fullMediaUrl} target="_blank" rel="noopener noreferrer" style={{ color: 'inherit' }}>
+      <Box
+        onClick={() => {
+          // Показываем подтверждение перед скачиванием
+          if (window.confirm(`Скачать файл ${message.filename || 'файл'}?`)) {
+            window.open(fullMediaUrl, '_blank');
+          }
+        }}
+        sx={{
+          cursor: 'pointer',
+          p: 1,
+          border: '1px solid #ccc',
+          borderRadius: 0,
+          '&:hover': {
+            backgroundColor: '#f5f5f5'
+          }
+        }}
+      >
         <Typography variant="body2">
-          {message.filename || 'Скачать файл'}
+          📁 {message.filename || 'Скачать файл'}
         </Typography>
-      </a>
+      </Box>
     </Box>
   );
-};
+});
 
 
-export default function ChatBubble({ message, isMe, showTime }) {
+function ChatBubble({ message, isMe, showTime }) {
   const [contextMenu, setContextMenu] = React.useState(null);
 
   const handleContextMenu = (event) => {
@@ -202,3 +219,12 @@ export default function ChatBubble({ message, isMe, showTime }) {
     </Box>
   );
 }
+
+export default React.memo(ChatBubble, (prevProps, nextProps) => {
+  // Сравниваем основные пропсы
+  if (prevProps.isMe !== nextProps.isMe) return false;
+  if (prevProps.showTime !== nextProps.showTime) return false;
+  
+  // Используем утилиту для сравнения сообщений
+  return areMessagesPropsEqual(prevProps.message, nextProps.message);
+});

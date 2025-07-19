@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import UserAvatar from "./UserAvatar";
 
-export default function ChatSidebar({ chats, selectedChat, onSelect }) {
+function ChatSidebar({ chats, selectedChat, onSelect }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -140,16 +140,15 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
                 mb: 0,
                 position: 'relative',
                 borderBottom: '1px solid #E0E0E0',
-                transition: 'all 0.15s ease-in-out',
+                transition: 'background-color 0.2s ease', // Упрощенная анимация
                 '&:hover': {
                   backgroundColor: '#F8F8F8',
-                  transform: 'none',
                 },
                 '&.Mui-selected': {
-                  backgroundColor: '#000000',
+                  backgroundColor: '#1976D2',
                   color: '#FFFFFF',
                   '&:hover': {
-                    backgroundColor: '#333333',
+                    backgroundColor: '#1565C0',
                   },
                   '& .MuiTypography-root': {
                     color: '#FFFFFF !important',
@@ -162,6 +161,12 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
                 ...(showBadge && {
                   backgroundColor: 'rgba(255, 0, 0, 0.04)',
                   borderLeft: '4px solid #FF0000',
+                  animation: 'pulse 2s infinite',
+                  '@keyframes pulse': {
+                    '0%': { boxShadow: '0 0 0 0 rgba(255, 0, 0, 0.4)' },
+                    '70%': { boxShadow: '0 0 0 8px rgba(255, 0, 0, 0)' },
+                    '100%': { boxShadow: '0 0 0 0 rgba(255, 0, 0, 0)' },
+                  },
                   '&:hover': {
                     backgroundColor: 'rgba(255, 0, 0, 0.08)',
                   },
@@ -231,15 +236,15 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
                             right: 0,
                             bottom: 0,
                             backgroundColor: '#FF0000',
-                            animation: 'pulse 2s infinite',
-                            '@keyframes pulse': {
+                            animation: 'ripple 2s infinite',
+                            '@keyframes ripple': {
                               '0%': {
                                 opacity: 1,
                                 transform: 'scale(1)',
                               },
                               '50%': {
                                 opacity: 0.7,
-                                transform: 'scale(1.1)',
+                                transform: 'scale(1.2)',
                               },
                               '100%': {
                                 opacity: 1,
@@ -356,3 +361,5 @@ export default function ChatSidebar({ chats, selectedChat, onSelect }) {
     </Paper>
   );
 }
+
+export default React.memo(ChatSidebar);

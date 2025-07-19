@@ -139,7 +139,6 @@ const swissTheme = createTheme({
           letterSpacing: '0.08em',
           padding: '12px 24px',
           border: '2px solid transparent',
-          transition: 'all 0.15s ease-in-out',
           '&:hover': {
             transform: 'none', // No elevation effects in Swiss style
           },
@@ -178,31 +177,24 @@ const swissTheme = createTheme({
       styleOverrides: {
         root: {
           '& .MuiOutlinedInput-root': {
-            borderRadius: 0, // Swiss style: rectangular inputs
-            backgroundColor: '#FFFFFF',
-            border: '2px solid #000000',
+            borderRadius: 0,
+            transition: 'none', // Убираем анимации для производительности
             '& fieldset': {
-              border: 'none',
+              border: '2px solid #E0E0E0',
+              transition: 'none', // Убираем анимации
             },
-            '&:hover': {
-              backgroundColor: '#F8F8F8',
+            '&:hover fieldset': {
+              borderColor: '#BDBDBD',
+              transition: 'none', // Убираем анимации
             },
-            '&.Mui-focused': {
-              backgroundColor: '#FFFFFF',
-              '& .MuiOutlinedInput-notchedOutline': {
-                border: '2px solid #FF0000', // Red focus border
-              },
+            '&.Mui-focused fieldset': {
+              borderColor: '#2196F3',
+              transition: 'none', // Убираем анимации
             },
           },
-          '& .MuiInputLabel-outlined': {
-            color: '#666666',
-            fontWeight: 500,
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            fontSize: '0.75rem',
-            '&.Mui-focused': {
-              color: '#FF0000',
-            },
+          '& .MuiInputBase-input': {
+            transition: 'none', // Убираем анимации с input
+            fontSize: '16px', // Предотвращаем zoom на мобильных
           },
         },
       },

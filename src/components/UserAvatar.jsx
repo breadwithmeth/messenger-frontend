@@ -1,7 +1,7 @@
 import React from 'react';
 import { Avatar, Box } from '@mui/material';
 
-export default function UserAvatar({ user, size = 32 }) {
+function UserAvatar({ user, size = 32 }) {
   if (!user) return null;
 
   const getInitials = (name, email) => {
@@ -42,3 +42,5 @@ export default function UserAvatar({ user, size = 32 }) {
     </Avatar>
   );
 }
+
+export default React.memo(UserAvatar);

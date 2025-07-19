@@ -3,7 +3,7 @@ import { Box, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import api from '../api';
 
-export default function TopBar({ onLogout, selectedChat, onChatUpdated }) {
+function TopBar({ onLogout, selectedChat, onChatUpdated }) {
   const navigate = useNavigate();
   const [currentUser, setCurrentUser] = useState(null);
   const [isAssigning, setIsAssigning] = useState(false);
@@ -133,6 +133,9 @@ export default function TopBar({ onLogout, selectedChat, onChatUpdated }) {
               fontSize: '0.875rem',
               padding: '8px 16px',
               lineHeight: 1.4,
+              '&:active': {
+                transform: 'translateY(0)',
+              }
             }}
           >
             {isAssigning ? 'Отпускание...' : 'Отпустить чат'}
@@ -179,3 +182,5 @@ export default function TopBar({ onLogout, selectedChat, onChatUpdated }) {
     </Box>
   );
 }
+
+export default React.memo(TopBar);
