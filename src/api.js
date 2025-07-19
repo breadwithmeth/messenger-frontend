@@ -39,6 +39,25 @@ const getChats = async () => {
   return response.data;
 };
 
+// Получить назначенные чаты за последние 24 часа
+const getMyAssignedChats = async () => {
+  const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const now = new Date();
+  
+  const response = await apiClient.get('/chat-assignment/my-assigned', {
+    params: {
+      from: yesterday.toISOString(),
+      to: now.toISOString()
+    }
+  });
+  
+  console.log('Назначенные чаты:', response.data.chats);
+  console.log('Всего:', response.data.total);
+  console.log('Фильтры:', response.data.filters);
+  
+  return response.data;
+};
+
 const getMessagesByChatId = async (chatId) => {
   const response = await apiClient.get(`/chats/${chatId}/messages`);
   return response.data;
@@ -51,6 +70,21 @@ const getOrganizationPhones = async () => {
 
 const sendTextMessage = async ({ organizationPhoneId, receiverJid, text }) => {
   const response = await apiClient.post('/messages/send-text', { organizationPhoneId, receiverJid, text });
+  return response.data;
+};
+
+const sendMediaMessage = async ({ chatId, file, mediaType, caption }) => {
+  const formData = new FormData();
+  formData.append('media', file);
+  formData.append('chatId', chatId);
+  formData.append('mediaType', mediaType);
+  if (caption) formData.append('caption', caption);
+
+  const response = await apiClient.post('/media/send', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return response.data;
 };
 
@@ -264,13 +298,42 @@ const getCurrentUser = async () => {
   return response.data;
 };
 
+const markChatAsRead = async (chatId) => {
+  const response = await apiClient.post(`/message-read/${chatId}/mark-read`);
+  return response.data;
+};
+
+const assignChatToOperator = async (chatId, operatorId, priority = 'medium') => {
+  const response = await apiClient.post('/chat-assignment/assign', {
+    chatId,
+    operatorId,
+    priority
+  });
+  return response.data;
+};
+
+const takeChat = async (chatId, priority = 'medium') => {
+  // Получаем текущего пользователя и назначаем чат на него
+  const currentUser = await getCurrentUser();
+  return assignChatToOperator(chatId, currentUser.id, priority);
+};
+
+const unassignChat = async (chatId) => {
+  const response = await apiClient.post('/chat-assignment/unassign', {
+    chatId
+  });
+  return response.data;
+};
+
 
 const api = {
     login,
     getChats,
+    getMyAssignedChats,
     getMessagesByChatId,
     getOrganizationPhones,
     sendTextMessage,
+    sendMediaMessage,
     createWhatsAppAccount,
     connectWhatsAppAccount,
     disconnectWhatsAppAccount,
@@ -281,6 +344,10 @@ const api = {
     getUsers,
     createUser,
     getCurrentUser,
+    markChatAsRead,
+    assignChatToOperator,
+    takeChat,
+    unassignChat,
 };
 
 export default api;
@@ -288,9 +355,11 @@ export default api;
 export {
     login,
     getChats,
+    getMyAssignedChats,
     getMessagesByChatId,
     getOrganizationPhones,
     sendTextMessage,
+    sendMediaMessage,
     createWhatsAppAccount,
     connectWhatsAppAccount,
     disconnectWhatsAppAccount,
@@ -301,4 +370,8 @@ export {
     getUsers,
     createUser,
     getCurrentUser,
+    markChatAsRead,
+    assignChatToOperator,
+    takeChat,
+    unassignChat,
 };

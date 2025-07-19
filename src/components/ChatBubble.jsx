@@ -106,19 +106,21 @@ export default function ChatBubble({ message, isMe, showTime }) {
       sx={{
         maxWidth: '75%',
         minWidth: '60px',
-        p: '0.875rem 1.25rem',
+        p: '1rem 1.5rem',
         mb: '0.5rem',
         borderRadius: 0, // Swiss style: rectangular bubbles
         boxShadow: 'none',
-        fontSize: '0.9375rem',
+        fontSize: '1rem',
+        lineHeight: 1.5,
         whiteSpace: 'pre-wrap',
         wordBreak: 'break-word',
         position: 'relative',
         transition: 'none', // No animations in Swiss style
         alignSelf: isMe ? 'flex-end' : 'flex-start',
-        bgcolor: isMe ? '#000000' : '#FFFFFF',
-        color: isMe ? '#FFFFFF' : '#000000',
-        border: '2px solid #000000'
+        bgcolor: isMe ? '#1976D2' : '#FFFFFF',
+        color: isMe ? '#FFFFFF' : '#212121',
+        border: isMe ? '2px solid #1976D2' : '2px solid #E0E0E0',
+        fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'
       }}
     >
       {/* Больше не показываем имя отправителя внутри bubble, 
@@ -129,33 +131,60 @@ export default function ChatBubble({ message, isMe, showTime }) {
           sx={{
             p: 1.5,
             mb: 1,
-            bgcolor: isMe ? 'rgba(0,0,0,0.15)' : 'action.hover',
+            bgcolor: isMe ? 'rgba(255,255,255,0.15)' : '#F5F5F5',
             borderRadius: 0, // Swiss style: rectangular quotes
-            borderLeft: '3px solid',
-            borderColor: isMe ? 'rgba(255,255,255,0.5)' : 'primary.main',
+            borderLeft: '4px solid',
+            borderColor: isMe ? 'rgba(255,255,255,0.8)' : '#2196F3',
           }}
         >
-          <Typography variant="caption" sx={{ opacity: 0.8, wordBreak: 'break-all' }}>
+          <Typography 
+            variant="body2" 
+            sx={{ 
+              opacity: 0.9, 
+              wordBreak: 'break-all',
+              fontStyle: 'italic',
+              color: isMe ? '#FFFFFF' : '#424242',
+              fontSize: '0.9rem',
+              fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'
+            }}
+          >
             {message.quotedContent}
           </Typography>
         </Box>
       )}
       <MediaContent message={message} />
-      <Typography variant="body1" component="div" sx={{ fontFamily: 'Tektur, sans-serif' }}>
+      <Typography 
+        variant="body1" 
+        component="div" 
+        sx={{ 
+          fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+          fontSize: '1rem',
+          lineHeight: 1.5,
+          color: isMe ? '#FFFFFF' : '#212121'
+        }}
+      >
         {message.content}
       </Typography>
-      {showTime && (
+      {showTime && message.timestamp && (
         <Typography
           variant="caption"
           sx={{
             display: 'block',
             textAlign: 'right',
             fontSize: '0.75rem',
-            mt: 1,
-            opacity: 0.7,
+            mt: 1.5,
+            opacity: 0.8,
+            fontFamily: '"Roboto Mono", "Courier New", monospace', // Swiss style: monospace for time
+            letterSpacing: '0.5px',
+            color: isMe ? '#E3F2FD' : '#757575',
+            fontWeight: 500
           }}
         >
-          {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {new Date(message.timestamp).toLocaleTimeString('ru-RU', { 
+            hour: '2-digit', 
+            minute: '2-digit',
+            second: '2-digit'
+          })}
         </Typography>
       )}
       <Menu

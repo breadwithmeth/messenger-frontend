@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import UserAvatar from "./UserAvatar";
 
-export default function ChatSidebar({ chats, selectedChat, onSelect, newMessageCounts = {} }) {
+export default function ChatSidebar({ chats, selectedChat, onSelect }) {
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -20,8 +20,8 @@ export default function ChatSidebar({ chats, selectedChat, onSelect, newMessageC
     window.location.reload();
   };
 
-  // Вычисляем общее количество новых сообщений
-  const totalNewMessages = Object.values(newMessageCounts).reduce((sum, count) => sum + count, 0);
+  // Вычисляем общее количество непрочитанных сообщений
+  const totalUnreadMessages = chats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0);
 
   // Сортируем чаты по времени от новых к старым
   const sortedChats = [...chats].sort((a, b) => {
@@ -61,19 +61,20 @@ export default function ChatSidebar({ chats, selectedChat, onSelect, newMessageC
           minHeight: '64px',
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Typography 
-            variant="h6" 
-            fontWeight="500"
-            sx={{
-              textTransform: 'uppercase',
-              letterSpacing: '0.08em',
-              fontSize: '1rem'
-            }}
-          >
-            Чаты
-          </Typography>
-          {totalNewMessages > 0 && (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>        <Typography 
+          variant="h6" 
+          fontWeight="600"
+          sx={{
+            textTransform: 'uppercase',
+            letterSpacing: '0.1em',
+            fontSize: '1.1rem',
+            color: '#212121',
+            fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'
+          }}
+        >
+          Чаты
+        </Typography>
+          {totalUnreadMessages > 0 && (
             <Box
               sx={{
                 minWidth: 20,
@@ -82,7 +83,7 @@ export default function ChatSidebar({ chats, selectedChat, onSelect, newMessageC
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                px: totalNewMessages > 9 ? 0.5 : 0,
+                px: totalUnreadMessages > 9 ? 0.5 : 0,
               }}
             >
               <Typography
@@ -94,7 +95,7 @@ export default function ChatSidebar({ chats, selectedChat, onSelect, newMessageC
                   lineHeight: 1,
                 }}
               >
-                {totalNewMessages > 99 ? '99+' : totalNewMessages}
+                {totalUnreadMessages > 99 ? '99+' : totalUnreadMessages}
               </Typography>
             </Box>
           )}
@@ -123,10 +124,10 @@ export default function ChatSidebar({ chats, selectedChat, onSelect, newMessageC
         {sortedChats.map((chat) => {
           // Определяем, является ли чат неотвеченным (последнее сообщение не от нас)
           const isUnread = chat.lastMessage && !chat.lastMessage.fromMe;
-          // Определяем количество новых сообщений для этого чата
-          const newMessageCount = newMessageCounts[chat.id] || 0;
-          // Показываем badge если есть новые сообщения или чат неотвеченный
-          const showBadge = isUnread || newMessageCount > 0;
+          // Определяем количество непрочитанных сообщений для этого чата
+          const unreadCount = chat.unreadCount || 0;
+          // Показываем badge только если есть непрочитанные сообщения
+          const showBadge = unreadCount > 0;
           
           return (
             <ListItem
@@ -183,11 +184,14 @@ export default function ChatSidebar({ chats, selectedChat, onSelect, newMessageC
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <Typography 
-                    variant="subtitle2" 
+                    variant="subtitle1" 
                     noWrap
                     sx={{ 
-                      fontWeight: showBadge ? 'bold' : 'normal',
-                      flex: 1 
+                      fontWeight: showBadge ? 600 : 500,
+                      flex: 1,
+                      fontSize: '1rem',
+                      color: '#212121',
+                      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'
                     }}
                   >
                     {chat.name || chat.remoteJid || chat.receivingPhoneJid}
@@ -195,7 +199,7 @@ export default function ChatSidebar({ chats, selectedChat, onSelect, newMessageC
                   {showBadge && (
                     <Box
                       sx={{
-                        minWidth: newMessageCount > 0 ? 24 : 20,
+                        minWidth: unreadCount > 0 ? 24 : 20,
                         height: 20,
                         backgroundColor: '#FF0000', // Swiss style red
                         display: 'flex',
@@ -203,22 +207,22 @@ export default function ChatSidebar({ chats, selectedChat, onSelect, newMessageC
                         justifyContent: 'center',
                         flexShrink: 0,
                         position: 'relative',
-                        px: newMessageCount > 9 ? 0.5 : 0,
+                        px: unreadCount > 9 ? 0.5 : 0,
                       }}
                     >
                       <Typography
                         variant="caption"
                         sx={{
                           color: '#FFFFFF',
-                          fontSize: newMessageCount > 0 ? '0.6rem' : '0.7rem',
+                          fontSize: unreadCount > 0 ? '0.6rem' : '0.7rem',
                           fontWeight: 'bold',
                           lineHeight: 1,
                         }}
                       >
-                        {newMessageCount > 0 ? (newMessageCount > 99 ? '99+' : newMessageCount) : '•'}
+                        {unreadCount > 0 ? (unreadCount > 99 ? '99+' : unreadCount) : '•'}
                       </Typography>
                       {/* Пульсирующий эффект для Swiss Style только при новых сообщениях */}
-                      {newMessageCount > 0 && (
+                      {unreadCount > 0 && (
                         <Box
                           sx={{
                             position: 'absolute',
@@ -250,11 +254,13 @@ export default function ChatSidebar({ chats, selectedChat, onSelect, newMessageC
                 </Box>
                 <Typography
                   variant="body2"
-                  color="text.secondary"
                   noWrap
                   sx={{ 
                     mb: 0.5,
-                    fontWeight: showBadge ? 'medium' : 'normal',
+                    fontWeight: showBadge ? 500 : 400,
+                    color: showBadge ? '#424242' : '#757575',
+                    fontSize: '0.9rem',
+                    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'
                   }}
                 >
                   {/* Показываем префикс отправителя */}
@@ -263,9 +269,11 @@ export default function ChatSidebar({ chats, selectedChat, onSelect, newMessageC
                       component="span" 
                       variant="caption" 
                       sx={{ 
-                        opacity: 0.7,
-                        fontWeight: 500,
-                        mr: 0.5 
+                        opacity: 0.8,
+                        fontWeight: 600,
+                        mr: 0.5,
+                        color: '#2196F3',
+                        fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'
                       }}
                     >
                       {chat.lastMessage.senderUser.name || chat.lastMessage.senderUser.email.split('@')[0]}:
@@ -273,8 +281,33 @@ export default function ChatSidebar({ chats, selectedChat, onSelect, newMessageC
                   )}
                   {chat.lastMessage ? chat.lastMessage.content : "Нет сообщений"}
                 </Typography>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="caption" color="text.secondary" noWrap>
+                
+                {/* Информация о назначении чата */}
+                <Typography
+                  variant="caption"
+                  sx={{ 
+                    mb: 0.5,
+                    fontStyle: 'normal',
+                    color: chat.assignedUser ? '#2196F3' : '#9E9E9E',
+                    fontSize: '0.75rem',
+                    fontWeight: chat.assignedUser ? 500 : 400,
+                    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'
+                  }}
+                >
+                  {chat.assignedUser 
+                    ? `Назначен: ${chat.assignedUser.name || chat.assignedUser.email}`
+                    : 'Чат свободен'
+                  }
+                </Typography>                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography 
+                    variant="caption" 
+                    noWrap
+                    sx={{ 
+                      color: '#757575',
+                      fontSize: '0.75rem',
+                      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'
+                    }}
+                  >
                     {chat.organizationPhone?.displayName || ''}
                   </Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -284,14 +317,34 @@ export default function ChatSidebar({ chats, selectedChat, onSelect, newMessageC
                     )}
                     <Typography 
                       variant="caption" 
-                      color="text.secondary" 
                       noWrap
                       sx={{ 
-                        fontWeight: isUnread ? 'bold' : 'normal',
-                        color: isUnread ? 'warning.main' : 'text.secondary'
+                        fontWeight: isUnread ? 600 : 400,
+                        color: isUnread ? '#FF5722' : '#757575',
+                        fontSize: '0.75rem',
+                        fontFamily: '"Roboto Mono", "Courier New", monospace'
                       }}
                     >
-                      {chat.lastMessage?.timestamp ? new Date(chat.lastMessage.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                      {chat.lastMessage?.timestamp ? (() => {
+                        const messageDate = new Date(chat.lastMessage.timestamp);
+                        const today = new Date();
+                        const yesterday = new Date(today);
+                        yesterday.setDate(yesterday.getDate() - 1);
+                        
+                        if (messageDate.toDateString() === today.toDateString()) {
+                          // Сегодня - показываем время
+                          return messageDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                        } else if (messageDate.toDateString() === yesterday.toDateString()) {
+                          // Вчера
+                          return 'Вчера';
+                        } else if (messageDate.getFullYear() === today.getFullYear()) {
+                          // Этот год - показываем день и месяц
+                          return messageDate.toLocaleDateString([], { day: '2-digit', month: '2-digit' });
+                        } else {
+                          // Другой год - показываем полную дату
+                          return messageDate.toLocaleDateString([], { day: '2-digit', month: '2-digit', year: '2-digit' });
+                        }
+                      })() : ''}
                     </Typography>
                   </Box>
                 </Box>

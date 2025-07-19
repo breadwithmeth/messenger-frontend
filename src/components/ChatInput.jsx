@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   Box, 
   TextField, 
@@ -13,14 +13,17 @@ import {
   InputLabel,
   Select,
   Typography,
-  CircularProgress
+  CircularProgress,
+  IconButton
 } from "@mui/material";
-import { Send as SendIcon } from '@mui/icons-material';
+import { Send as SendIcon, AttachFile as AttachFileIcon } from '@mui/icons-material';
 
-export default function ChatInput({ value, onChange, onSend, disabled, onRewrite, isRewriting }) {
+export default function ChatInput({ value, onChange, onSend, disabled, onRewrite, isRewriting, onMediaSend }) {
   const [templates, setTemplates] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
+  const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const fileInputRef = useRef(null);
 
   // State for the rewrite options dialog
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -92,6 +95,38 @@ export default function ChatInput({ value, onChange, onSend, disabled, onRewrite
     e.preventDefault();
     if (value.trim() && !disabled) {
       onSend(e);
+    }
+  };
+
+  const handleMediaButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = async (event) => {
+    const file = event.target.files[0];
+    if (!file || !onMediaSend) return;
+
+    setIsUploadingMedia(true);
+    try {
+      // Определяем тип медиафайла
+      let mediaType = 'document';
+      if (file.type.startsWith('image/')) {
+        mediaType = 'image';
+      } else if (file.type.startsWith('video/')) {
+        mediaType = 'video';
+      } else if (file.type.startsWith('audio/')) {
+        mediaType = 'audio';
+      }
+
+      await onMediaSend(file, mediaType);
+    } catch (error) {
+      console.error('Ошибка при отправке медиафайла:', error);
+    } finally {
+      setIsUploadingMedia(false);
+      // Очищаем input для возможности повторной отправки того же файла
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -208,6 +243,43 @@ export default function ChatInput({ value, onChange, onSend, disabled, onRewrite
           >
             Улучшить
           </Button>
+        )}
+
+        {/* Media Upload Button */}
+        {onMediaSend && (
+          <>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+              style={{ display: 'none' }}
+              accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt"
+            />
+            <IconButton
+              onClick={handleMediaButtonClick}
+              disabled={disabled || isUploadingMedia}
+              color="primary"
+              sx={{
+                border: '2px solid',
+                borderColor: 'primary.main',
+                borderRadius: 0,
+                p: '10px',
+                '&:hover': {
+                  backgroundColor: '#F0F0F0',
+                },
+                '&:disabled': {
+                  borderColor: '#E0E0E0',
+                  color: '#CCCCCC',
+                }
+              }}
+            >
+              {isUploadingMedia ? (
+                <CircularProgress size={20} />
+              ) : (
+                <AttachFileIcon />
+              )}
+            </IconButton>
+          </>
         )}
 
         {/* Send Button */}

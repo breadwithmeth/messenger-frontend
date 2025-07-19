@@ -24,11 +24,12 @@ export default function MessageGroupHeader({ senderUser, timestamp }) {
     >
       <UserAvatar user={senderUser} size={20} />
       <Typography 
-        variant="caption" 
+        variant="body2" 
         sx={{ 
-          color: 'text.secondary',
-          fontWeight: 500,
-          fontSize: '0.85rem' /* Увеличено для лучшей читаемости */
+          color: '#424242',
+          fontWeight: 600,
+          fontSize: '0.9rem',
+          fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif'
         }}
       >
         {displayName}
@@ -36,9 +37,10 @@ export default function MessageGroupHeader({ senderUser, timestamp }) {
       <Typography 
         variant="caption" 
         sx={{ 
-          color: 'text.secondary',
-          fontSize: '0.8rem', /* Увеличено */
-          opacity: 0.7
+          color: '#757575',
+          fontSize: '0.8rem',
+          fontFamily: '"Roboto Mono", "Courier New", monospace',
+          fontWeight: 500
         }}
       >
         {time}

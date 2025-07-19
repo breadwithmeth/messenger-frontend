@@ -1,9 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import api from '../api';
-import { useNotification } from '../context/NotificationContext';
 
 function Dashboard() {
-  const { showNotification } = useNotification();
   const [chats, setChats] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -16,10 +14,6 @@ function Dashboard() {
   const [messagesError, setMessagesError] = useState('');
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const messagesEndRef = useRef(null);
-  
-  // Для уведомлений о новых сообщениях
-  const [lastKnownMessageCounts, setLastKnownMessageCounts] = useState({});
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -27,41 +21,6 @@ function Dashboard() {
       api.getChats()
         .then(data => {
           if (!isMounted) return;
-          
-          // Проверяем новые сообщения для уведомлений
-          if (initialLoadComplete) {
-            data.forEach(chat => {
-              const chatId = chat.id;
-              const lastMessage = chat.lastMessage;
-              
-              if (lastMessage && !lastMessage.fromMe) {
-                const lastKnown = lastKnownMessageCounts[chatId];
-                const currentMessageId = lastMessage.id;
-                
-                // Если это новое сообщение от клиента и мы не в этом чате
-                if (lastKnown && lastKnown !== currentMessageId && selectedChat?.id !== chatId) {
-                  const chatName = chat.name || chat.remoteJid?.split('@')[0] || 'Неизвестный чат';
-                  const messagePreview = lastMessage.content?.length > 50 
-                    ? lastMessage.content.slice(0, 50) + '...' 
-                    : lastMessage.content || 'Новое сообщение';
-                  
-                  showNotification(
-                    `${chatName}: ${messagePreview}`,
-                    'info'
-                  );
-                }
-              }
-            });
-          }
-          
-          // Обновляем счетчики сообщений
-          const newMessageCounts = {};
-          data.forEach(chat => {
-            if (chat.lastMessage) {
-              newMessageCounts[chat.id] = chat.lastMessage.id;
-            }
-          });
-          setLastKnownMessageCounts(newMessageCounts);
           
           // Сортируем чаты по времени от новых к старым
           const sorted = [...data].sort((a, b) => {
@@ -81,9 +40,6 @@ function Dashboard() {
           });
           
           setChats(sorted);
-          if (!initialLoadComplete) {
-            setInitialLoadComplete(true);
-          }
         })
         .catch(err => isMounted && setError(err.message || 'Ошибка загрузки чатов'))
         .finally(() => isMounted && setLoading(false));
@@ -95,7 +51,7 @@ function Dashboard() {
       isMounted = false;
       clearInterval(intervalId);
     };
-  }, [selectedChat, initialLoadComplete, lastKnownMessageCounts, showNotification]);
+  }, [selectedChat]);
 
   const fetchMessages = async (chatId) => {
     if (chatMessages.length === 0) setMessagesLoading(true);
