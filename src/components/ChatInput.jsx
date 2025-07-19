@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useDeferredValue } from "react";
+import { useOptimizedInput } from '../hooks/useOptimizedInput';
 import { 
   Box, 
   TextField, 
@@ -22,12 +23,16 @@ import { Send as SendIcon, AttachFile as AttachFileIcon } from '@mui/icons-mater
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
 // Максимально оптимизированный компонент для устранения лага ввода
-const ChatInput = React.memo(function ChatInput({ value, onChange, onSend, disabled, onRewrite, isRewriting, onMediaSend }) {
+
+const ChatInput = React.memo(function ChatInput({ onSend, disabled, onRewrite, isRewriting, onMediaSend }) {
   const [templates, setTemplates] = useState([]);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const fileInputRef = useRef(null);
+
+  // Локальное состояние для input
+  const { value, deferredValue, handleChange, reset } = useOptimizedInput('', { debounceDelay: 0 });
 
   // Минимальный state для диалога
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -35,9 +40,6 @@ const ChatInput = React.memo(function ChatInput({ value, onChange, onSend, disab
   const [tone, setTone] = useState('professional');
   const [style, setStyle] = useState('friendly');
   const [length, setLength] = useState('same');
-  
-  // Используем useDeferredValue для изоляции input от других обновлений
-  const deferredValue = React.useDeferredValue(value);
 
   // Оптимизированная загрузка шаблонов только при открытии меню
   const loadTemplates = useCallback(() => {
@@ -97,9 +99,12 @@ const ChatInput = React.memo(function ChatInput({ value, onChange, onSend, disab
   const handleSubmit = useCallback((e) => {
     e.preventDefault();
     if (deferredValue.trim() && !disabled) {
-      onSend(e);
+      if (typeof onSend === 'function') {
+        onSend(deferredValue);
+      }
+      reset();
     }
-  }, [deferredValue, disabled, onSend]);
+  }, [deferredValue, disabled, onSend, reset]);
 
   const handleFileSelect = useCallback(async (event) => {
     const file = event.target.files[0];
@@ -175,20 +180,20 @@ const ChatInput = React.memo(function ChatInput({ value, onChange, onSend, disab
           multiline
           maxRows={4}
           value={value}
-          onChange={onChange}
+          onChange={handleChange}
           placeholder="Введите сообщение..."
           disabled={disabled}
           variant="outlined"
           size="small"
           inputProps={{
             style: {
-              resize: 'none' // Отключаем ресайзинг для стабильности
+              resize: 'none'
             }
           }}
           sx={{
             '& .MuiOutlinedInput-root': {
               borderRadius: 0,
-              transition: 'none', // Убираем все анимации
+              transition: 'none',
               '& fieldset': {
                 transition: 'none'
               },
@@ -200,8 +205,8 @@ const ChatInput = React.memo(function ChatInput({ value, onChange, onSend, disab
               }
             },
             '& .MuiInputBase-input': {
-              transition: 'none', // Убираем анимации у инпута
-              fontSize: '16px', // Предотвращаем zoom на мобильных
+              transition: 'none',
+              fontSize: '16px',
             }
           }}
         />

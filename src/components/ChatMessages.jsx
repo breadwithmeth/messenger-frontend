@@ -31,7 +31,19 @@ export default function ChatMessages({ messages, userId }) {
     return groups;
   };
 
-  const grouped = groupByDate(messages);
+  // Сортируем сообщения по времени последнего сообщения (или созданию)
+  const sortedMessages = [...messages].sort((a, b) => {
+    const getTime = (msg) => {
+      if (msg.lastMessage && msg.lastMessage.timestamp) return new Date(msg.lastMessage.timestamp).getTime();
+      if (msg.timestamp) return new Date(msg.timestamp).getTime();
+      if (msg.lastMessageAt) return new Date(msg.lastMessageAt).getTime();
+      if (msg.createdAt) return new Date(msg.createdAt).getTime();
+      return 0;
+    };
+    return getTime(b) - getTime(a); // Новые сверху
+  });
+
+  const grouped = groupByDate(sortedMessages);
   const dates = Object.keys(grouped).sort((a, b) => new Date(a) - new Date(b));
 
   return (

@@ -1,4 +1,61 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { useOptimizedInput } from '../hooks/useOptimizedInput';
+import { FixedSizeList as List } from 'react-window';
+  // Виртуализированный список сообщений
+  const VirtualizedMessages = ({ messages, height, itemSize }) => {
+    const itemData = useMemo(() => messages, [messages]);
+    const Row = useCallback(({ index, style, data }) => {
+      const msg = data[index];
+      const isMe = msg.fromMe;
+      return (
+        <div
+          key={msg.id}
+          style={{
+            ...style,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: isMe ? 'flex-end' : 'flex-start',
+            justifyContent: 'flex-start',
+            padding: 0,
+            background: 'none',
+          }}
+        >
+          <div
+            style={{
+              alignSelf: isMe ? 'flex-end' : 'flex-start',
+              background: isMe ? '#000000' : '#FFFFFF',
+              color: isMe ? '#FFFFFF' : '#000000',
+              padding: '10px 14px',
+              borderRadius: 0,
+              marginBottom: 8,
+              maxWidth: '70%',
+              fontSize: 15,
+              border: '2px solid #000000',
+              wordBreak: 'break-word',
+              userSelect: 'text',
+            }}
+          >
+            <div>{msg.content}</div>
+            <div style={{ fontSize: 12, color: '#888', marginTop: 4, textAlign: isMe ? 'right' : 'left' }}>
+              {msg.timestamp && new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            </div>
+          </div>
+        </div>
+      );
+    }, []);
+    return (
+      <List
+        height={height}
+        itemCount={itemData.length}
+        itemSize={itemSize}
+        width={'100%'}
+        itemData={itemData}
+        overscanCount={8}
+      >
+        {Row}
+      </List>
+    );
+  };
 import api from '../api';
 
 function Dashboard() {
@@ -7,7 +64,7 @@ function Dashboard() {
   const [error, setError] = useState('');
   const [selectedChat, setSelectedChat] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
-  const [message, setMessage] = useState('');
+  // message убираем, переносим в OptimizedInput
   const [sending, setSending] = useState(false);
   const [sendError, setSendError] = useState('');
   const [messagesLoading, setMessagesLoading] = useState(false);
@@ -82,9 +139,9 @@ function Dashboard() {
     fetchMessages(chat.id);
   };
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!message.trim()) return;
+  // Обработчик отправки сообщения, вызывается из OptimizedInput
+  const handleSendMessage = useCallback(async (msg) => {
+    if (!msg.trim()) return;
     setSending(true);
     setSendError('');
     try {
@@ -94,15 +151,78 @@ function Dashboard() {
         setSendError('Недостаточно данных');
         return;
       }
-      await api.sendTextMessage({ organizationPhoneId, receiverJid, text: message });
-      setMessage('');
+      await api.sendTextMessage({ organizationPhoneId, receiverJid, text: msg });
       fetchMessages(selectedChat.id);
     } catch (err) {
       setSendError('Ошибка отправки: ' + (err?.message || ''));
     } finally {
       setSending(false);
     }
-  };
+  }, [selectedChat]);
+
+  // Оптимизированный input-компонент
+  function OptimizedInput({ onSend, disabled }) {
+    const {
+      value,
+      handleChange,
+      reset
+    } = useOptimizedInput('', { debounceDelay: 0 });
+
+    const handleSubmit = useCallback((e) => {
+      e.preventDefault();
+      if (!value.trim()) return;
+      onSend(value);
+      reset();
+    }, [value, onSend, reset]);
+
+    return (
+      <form
+        onSubmit={handleSubmit}
+        style={{ borderTop: '1px solid #ddd', display: 'flex', padding: 12, background: '#fafafa' }}
+      >
+        <input
+          type="text"
+          value={value}
+          onChange={handleChange}
+          placeholder="Введите сообщение..."
+          style={{
+            flex: 1,
+            padding: 12,
+            fontSize: 16,
+            borderRadius: 0,
+            border: '2px solid #000000',
+            outline: 'none',
+            backgroundColor: '#FFFFFF',
+            fontFamily: '"Helvetica Neue", Arial, sans-serif',
+          }}
+          autoComplete="off"
+          disabled={disabled}
+        />
+        <button
+          type="submit"
+          disabled={disabled || !value.trim()}
+          style={{
+            marginLeft: 8,
+            padding: '12px 24px',
+            background: '#000000',
+            color: '#FFFFFF',
+            border: '2px solid #000000',
+            fontWeight: 500,
+            textTransform: 'uppercase',
+            letterSpacing: '0.08em',
+            fontSize: '0.875rem',
+            borderRadius: 0,
+            cursor: disabled || !value.trim() ? 'not-allowed' : 'pointer',
+            opacity: disabled || !value.trim() ? 0.6 : 1,
+            transition: 'opacity 0.2s',
+            fontFamily: '"Helvetica Neue", Arial, sans-serif',
+          }}
+        >
+          Отправить
+        </button>
+      </form>
+    );
+  }
 
   useEffect(() => {
     if (!selectedChat) return;
@@ -222,81 +342,17 @@ function Dashboard() {
               {selectedChat.name || selectedChat.remoteJid}
             </header>
 
-            <div style={{ flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column' }}>
-              {messagesError && <div style={{ color: 'red', marginBottom: 8 }}>{messagesError}</div>}
-              {chatMessages.map(msg => {
-                const isMe = msg.fromMe;
-                return (
-                  <div
-                    key={msg.id}
-                    style={{
-                      alignSelf: isMe ? 'flex-end' : 'flex-start',
-                      background: isMe ? '#000000' : '#FFFFFF',
-                      color: isMe ? '#FFFFFF' : '#000000',
-                      padding: '10px 14px',
-                      borderRadius: 0, // Swiss style: rectangular bubbles
-                      marginBottom: 8,
-                      maxWidth: '70%',
-                      fontSize: 15,
-                      border: '2px solid #000000',
-                      wordBreak: 'break-word',
-                      userSelect: 'text',
-                    }}
-                  >
-                    <div>{msg.content}</div>
-                    <div style={{ fontSize: 12, color: '#888', marginTop: 4, textAlign: isMe ? 'right' : 'left' }}>
-                      {msg.timestamp && new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                  </div>
-                );
-              })}
+            <div style={{ flex: 1, overflowY: 'auto', padding: 0, display: 'flex', flexDirection: 'column' }}>
+              {messagesError && <div style={{ color: 'red', margin: 16 }}>{messagesError}</div>}
+              <VirtualizedMessages
+                messages={chatMessages}
+                height={window.innerHeight - 180}
+                itemSize={72}
+              />
               <div ref={messagesEndRef} />
             </div>
 
-            <form
-              onSubmit={handleSendMessage}
-              style={{ borderTop: '1px solid #ddd', display: 'flex', padding: 12, background: '#fafafa' }}
-            >
-              <input
-                type="text"
-                value={message}
-                onChange={e => setMessage(e.target.value)}
-                placeholder="Введите сообщение..."
-                style={{
-                  flex: 1,
-                  padding: 12,
-                  fontSize: 16,
-                  borderRadius: 0, // Swiss style: rectangular input
-                  border: '2px solid #000000',
-                  outline: 'none',
-                  backgroundColor: '#FFFFFF',
-                  fontFamily: '"Helvetica Neue", Arial, sans-serif',
-                }}
-                autoComplete="off"
-              />
-              <button
-                type="submit"
-                disabled={sending || !message.trim()}
-                style={{
-                  marginLeft: 8,
-                  padding: '12px 24px',
-                  background: '#000000',
-                  color: '#FFFFFF',
-                  border: '2px solid #000000',
-                  fontWeight: 500,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.08em',
-                  fontSize: '0.875rem',
-                  borderRadius: 0, // Swiss style: rectangular send button
-                  cursor: sending || !message.trim() ? 'not-allowed' : 'pointer',
-                  opacity: sending || !message.trim() ? 0.6 : 1,
-                  transition: 'opacity 0.2s',
-                  fontFamily: '"Helvetica Neue", Arial, sans-serif',
-                }}
-              >
-                Отправить
-              </button>
-            </form>
+            <OptimizedInput onSend={handleSendMessage} disabled={sending} />
             {sendError && (
               <div style={{ color: 'red', textAlign: 'center', padding: 6, fontWeight: 600 }}>
                 {sendError}

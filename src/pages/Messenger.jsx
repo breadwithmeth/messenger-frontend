@@ -226,7 +226,7 @@ function ChatMessages({ messages, userId, loading, isFirstLoad, onFirstLoadCompl
                 <ChatBubble 
                   key={`bubble-${msg.id}`}
                   message={messageWithQuote} 
-                  isMe={msg.fromMe || msg.senderId === userId}
+                  isMe={msg.fromMe}
                   showTime={true}
                 />
               </React.Fragment>
@@ -238,15 +238,7 @@ function ChatMessages({ messages, userId, loading, isFirstLoad, onFirstLoadCompl
   );
 }
 
-const MemoizedChatMessages = React.memo(ChatMessages, (prevProps, nextProps) => {
-  // Быстрое сравнение основных пропсов
-  if (prevProps.loading !== nextProps.loading) return false;
-  if (prevProps.userId !== nextProps.userId) return false;
-  if (prevProps.isFirstLoad !== nextProps.isFirstLoad) return false;
-  
-  // Используем утилиту для сравнения сообщений
-  return areMessagesEqual(prevProps.messages, nextProps.messages);
-});
+
 
 export default function Messenger({ onLogout }) {
   const theme = useTheme();
@@ -506,9 +498,8 @@ export default function Messenger({ onLogout }) {
     }
   };
 
-  const handleSendMessage = async (e) => {
-    if (e) e.preventDefault();
-    if (!message.trim() || !selectedChat) return;
+  const handleSendMessage = async (msg) => {
+    if (!msg.trim() || !selectedChat) return;
 
     // Проверяем права доступа к чату
     if (!canWriteToChat(selectedChat, currentUser)) {
@@ -531,7 +522,7 @@ export default function Messenger({ onLogout }) {
       const sentMessage = await api.sendTextMessage({ 
         organizationPhoneId, 
         receiverJid, 
-        text: message 
+        text: msg 
       });
       
       // Обновление UI с использованием transition для плавности
@@ -621,8 +612,11 @@ export default function Messenger({ onLogout }) {
     // Если у чата нет assignedUser, значит чат свободен и в него можно писать
     if (!chat.assignedUser) return true;
     
-    // Если есть assignedUser, проверяем совпадение ID
-    return chat.assignedUser.id === user.id;
+    // Если чат назначен текущему пользователю
+    if (chat.assignedUser.id === user.id) return true;
+
+    // Иначе нельзя писать
+    return false;
   };
 
   // Мемоизированные обработчики для оптимизации производительности
@@ -633,7 +627,6 @@ export default function Messenger({ onLogout }) {
   const handleSelectChat = (chat) => {
     setSelectedChat(chat);
     setIsFirstMessageLoad(true); // Сбрасываем флаг при выборе нового чата
-    
     // Отмечаем сообщения как прочитанные
     if (chat.id) {
       api.markChatAsRead(chat.id).catch(error => {
@@ -642,6 +635,7 @@ export default function Messenger({ onLogout }) {
     }
   };
 
+  // Возвращаем JSX для рендера страницы
   return (
     <Box sx={{ display: 'flex', height: '100vh', bgcolor: 'background.default' }}>
       <ChatSidebar
@@ -659,16 +653,14 @@ export default function Messenger({ onLogout }) {
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', bgcolor: 'background.default' }}>
             {selectedChat ? (
               <>
-                <MemoizedChatMessages 
-                  messages={messages} 
-                  userId={null} 
-                  loading={loading} 
+                <ChatMessages
+                  messages={memoizedMessages}
+                  userId={currentUser?.id || null}
+                  loading={loading}
                   isFirstLoad={isFirstMessageLoad}
                   onFirstLoadComplete={handleFirstLoadComplete}
                 />
                 <ChatInput
-                  value={message}
-                  onChange={handleInputChange}
                   onSend={handleSendMessage}
                   disabled={sending || isRewriting || !canWriteToChat(selectedChat, currentUser)}
                   onRewrite={handleRewrite}

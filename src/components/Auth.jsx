@@ -24,6 +24,10 @@ function Auth({ onLoginSuccess }) {
     try {
       const data = await api.login(email, password);
       localStorage.setItem('jwtToken', data.token);
+      // Сохраняем пользователя в localStorage для фильтрации чатов
+      if (data.user) {
+        localStorage.setItem('currentUser', JSON.stringify(data.user));
+      }
       onLoginSuccess();
     } catch (err) {
       console.error("Login error:", err);
